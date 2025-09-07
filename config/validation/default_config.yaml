@@ -1,0 +1,319 @@
+# Default Validation Configuration
+# Comprehensive configuration for flood risk model validation
+
+# General Settings
+validation_framework:
+  version: "1.0.0"
+  name: "Flood Risk Validation System"
+  description: "Comprehensive validation framework for flood risk models"
+
+# Metrics Configuration
+metrics:
+  # Enable/disable specific metric categories
+  calculate_iou: true
+  calculate_csi: true
+  calculate_regression: true
+  calculate_classification: true
+  
+  # Thresholds and parameters
+  depth_threshold: 0.01  # meters - minimum depth to consider as flood
+  binary_threshold: 0.5   # probability threshold for binary classification
+  
+  # IoU Configuration
+  iou:
+    enabled: true
+    threshold: 0.01  # depth threshold in meters
+    
+  # Classification Metrics
+  classification:
+    enabled: true
+    threshold: 0.5
+    metrics:
+      - precision
+      - recall
+      - f1_score
+      - accuracy
+      - specificity
+      - false_alarm_rate
+      - matthews_correlation
+      
+  # Regression Metrics
+  regression:
+    enabled: true
+    metrics:
+      - mae
+      - rmse
+      - bias
+      - r_squared
+      - nash_sutcliffe
+      - mape
+      - pbias
+      - kge
+      
+  # Critical Success Index
+  csi:
+    enabled: true
+    threshold: 0.01
+
+# Data Processing Configuration
+data_processing:
+  # Preprocessing parameters
+  preprocess:
+    clip_negative_depths: true
+    apply_min_threshold: true
+    apply_max_threshold: true
+    max_depth_clip: 50.0  # meters
+    
+  # Spatial alignment
+  spatial:
+    tolerance: 1e-6
+    resampling_method: "bilinear"  # nearest, bilinear, cubic
+    handle_nodata: true
+    nodata_value: -9999
+    
+  # Temporal alignment
+  temporal:
+    tolerance_seconds: 3600  # 1 hour
+    
+# LISFLOOD-FP Validation Configuration
+lisflood_validation:
+  enabled: true
+  reference_data:
+    path: "./reference_data/lisflood"
+    format: "asc"  # asc, wd, max, netcdf
+    
+  settings:
+    spatial_tolerance: 1e-6
+    depth_threshold: 0.01
+    max_depth: 50.0
+    resample_method: "bilinear"
+    mask_nodata: true
+    calculate_spatial_stats: true
+    calculate_temporal_stats: false
+    
+  outputs:
+    save_comparison_maps: true
+    save_difference_grids: true
+    generate_statistics: true
+
+# NFIP Validation Configuration
+nfip_validation:
+  enabled: false  # Disabled by default due to data availability
+  claims_data:
+    path: "./data/nfip/claims.csv"
+    format: "csv"  # csv, xlsx, parquet
+    
+  settings:
+    spatial_buffer: 100.0  # meters for spatial matching
+    temporal_window: 30    # days for temporal matching
+    min_claim_amount: 1000.0  # minimum claim amount to consider
+    exclude_wind_damage: true
+    include_repetitive_loss: true
+    
+  damage_categories:
+    minimal: [0, 10000]
+    moderate: [10000, 50000]
+    substantial: [50000, 100000]
+    severe: [100000, .inf]
+    
+  outputs:
+    create_claim_maps: true
+    analyze_spatial_patterns: true
+    generate_roc_curves: true
+
+# Visualization Configuration
+visualization:
+  enabled: true
+  
+  # Map generation
+  maps:
+    generate_flood_maps: true
+    generate_comparison_maps: true
+    generate_error_maps: true
+    interactive_maps: true
+    
+  # Plot generation
+  plots:
+    generate_scatter_plots: true
+    generate_histograms: true
+    generate_time_series: false
+    generate_spatial_analysis: true
+    
+  # Dashboard
+  dashboard:
+    create_performance_dashboard: true
+    include_metrics_summary: true
+    include_visualizations: true
+    
+  # Styling
+  style:
+    colormap: "Blues"
+    error_colormap: "RdBu_r"
+    figure_size: [12, 8]
+    dpi: 150
+    
+  # Map settings
+  map_settings:
+    center_lat: 40.0
+    center_lon: -95.0
+    zoom_level: 10
+    tile_layer: "OpenStreetMap"
+    
+# Report Configuration
+reporting:
+  enabled: true
+  
+  # Report types
+  formats:
+    generate_html: true
+    generate_pdf: false  # Requires weasyprint
+    generate_json_summary: true
+    
+  # Report content
+  content:
+    include_executive_summary: true
+    include_methodology: true
+    include_detailed_results: true
+    include_visualizations: true
+    include_recommendations: true
+    include_appendices: false
+    
+  # Report styling
+  style:
+    template: "professional"
+    title: "Flood Risk Model Validation Report"
+    subtitle: ""
+    author: "Validation Framework"
+    organization: "Flood Risk Assessment Team"
+    logo_path: null
+    
+  # Output settings
+  output:
+    base_filename: "validation_report"
+    timestamp_suffix: true
+    create_summary_json: true
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging
+  file_logging:
+    enabled: true
+    filename: "validation.log"
+    max_bytes: 10485760  # 10MB
+    backup_count: 5
+    
+  # Console logging
+  console_logging:
+    enabled: true
+    level: "INFO"
+
+# Performance Settings
+performance:
+  # Memory management
+  memory:
+    chunk_size: 1000000  # Process data in chunks for large datasets
+    max_memory_usage: "4GB"
+    
+  # Parallel processing
+  parallel:
+    enabled: true
+    n_workers: null  # null = auto-detect CPU count
+    
+  # Caching
+  cache:
+    enabled: true
+    cache_dir: "./.validation_cache"
+    max_cache_size: "1GB"
+
+# Quality Control
+quality_control:
+  # Data validation
+  data_validation:
+    check_coordinate_bounds: true
+    check_temporal_consistency: true
+    detect_outliers: true
+    outlier_threshold: 3.0  # standard deviations
+    
+  # Validation thresholds
+  validation_thresholds:
+    min_data_points: 100
+    min_spatial_coverage: 0.1  # 10% coverage required
+    max_missing_data: 0.2      # 20% missing data allowed
+    
+  # Alerts and warnings
+  alerts:
+    low_data_quality: true
+    poor_spatial_alignment: true
+    temporal_mismatch: true
+
+# Output Paths
+paths:
+  # Base directories
+  base_output_dir: "./validation_output"
+  reports_dir: "./validation_output/reports"
+  plots_dir: "./validation_output/plots"
+  data_dir: "./validation_output/data"
+  logs_dir: "./validation_output/logs"
+  cache_dir: "./.validation_cache"
+  
+  # Subdirectories
+  create_subdirs: true
+  timestamp_subdirs: true
+  
+# External Dependencies
+dependencies:
+  # Required packages
+  required:
+    - numpy
+    - pandas
+    - matplotlib
+    
+  # Optional packages with fallbacks
+  optional:
+    rasterio: "Limited spatial functionality without rasterio"
+    folium: "No interactive maps without folium"
+    plotly: "Limited plotting without plotly"
+    geopandas: "Limited spatial operations without geopandas"
+    sklearn: "No ML metrics without scikit-learn"
+    jinja2: "Limited template functionality without jinja2"
+    weasyprint: "No PDF reports without weasyprint"
+
+# Advanced Settings
+advanced:
+  # Experimental features
+  experimental:
+    enabled: false
+    features:
+      - enhanced_spatial_analysis
+      - ml_based_validation
+      - uncertainty_quantification
+      
+  # Custom validation functions
+  custom_validators:
+    enabled: false
+    module_path: null
+    
+  # Integration settings
+  integration:
+    api_enabled: false
+    webhook_url: null
+    
+# Environment-specific Settings
+environment:
+  development:
+    debug: true
+    verbose_logging: true
+    save_intermediate_results: true
+    
+  production:
+    debug: false
+    optimize_memory: true
+    parallel_processing: true
+    
+  testing:
+    use_sample_data: true
+    quick_validation: true
+    skip_visualizations: false
