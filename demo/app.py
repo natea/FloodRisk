@@ -39,6 +39,8 @@ class PredictionRequest(BaseModel):
     include_uncertainty: bool = True
 
 class PredictionResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     flood_probability: float
     flood_depth: float
     risk_level: str
@@ -52,6 +54,8 @@ class PredictionResponse(BaseModel):
     model_version: str = "v2.0"
 
 class HealthResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    
     status: str
     model_loaded: bool
     api_version: str
@@ -150,8 +154,21 @@ model = FloodRiskModel()
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the main demo page"""
-    with open("demo/templates/index.html", "r") as f:
-        return HTMLResponse(content=f.read())
+    # Try Docker path first, then local path
+    template_paths = [
+        "templates/index.html",  # Docker container path
+        "demo/templates/index.html",  # Local development path
+    ]
+    
+    for path in template_paths:
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                return HTMLResponse(content=f.read())
+    
+    raise HTTPException(
+        status_code=500,
+        detail=f"Template not found. Tried paths: {template_paths}"
+    )
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
@@ -259,8 +276,11 @@ async def batch_predict(locations: list[PredictionRequest]):
     return {"results": results, "count": len(results)}
 
 # Mount static files if needed
-if os.path.exists("demo/static"):
-    app.mount("/static", StaticFiles(directory="demo/static"), name="static")
+static_paths = ["static", "demo/static"]
+for path in static_paths:
+    if os.path.exists(path):
+        app.mount("/static", StaticFiles(directory=path), name="static")
+        break
 
 if __name__ == "__main__":
     import uvicorn
