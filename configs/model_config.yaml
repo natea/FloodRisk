@@ -1,0 +1,222 @@
+# Model configuration based on APPROACH.md specifications
+# FloodRisk ML Training Configuration
+
+# Model architecture
+model:
+  type: "unet"  # Options: unet, dual_stream
+  in_channels: 2  # [DEM, Rain] baseline, can be 2-6 with derived features
+  num_classes: 1  # Binary flood/no-flood
+  encoder_name: "resnet34"  # resnet34 or resnet50
+  encoder_weights: "imagenet"  # imagenet or None
+  dropout_rate: 0.2  # For MC Dropout uncertainty
+  use_fpn: false  # Feature Pyramid Network for multi-scale context
+
+# Data configuration
+data:
+  tile_size: 512  # 512x512 per APPROACH.md
+  tile_overlap: 64  # ~64 pixel overlap per APPROACH.md  
+  resolution: 10.0  # ~10m resolution per APPROACH.md
+  target_crs: "EPSG:3857"  # Metric CRS
+  
+  # Input channels
+  input_features:
+    - "dem"
+    - "rainfall"
+    # Optional derived features (uncomment to use):
+    # - "slope"
+    # - "plan_curvature" 
+    # - "profile_curvature"
+    # - "flow_accumulation"
+    # - "hand"
+  
+  # Balanced sampling per APPROACH.md
+  balanced_sampling:
+    enabled: true
+    flood_threshold: 0.02  # 2% minimum flooded pixels
+    flooded_ratio: 0.7     # 70% flooded tiles, 30% random
+  
+  # Return period mixing
+  return_periods:
+    "100yr": 150.0  # mm (example values - use NOAA Atlas 14)
+    "500yr": 200.0  # mm
+    "10yr": 75.0    # mm (sub-design negatives)
+    "25yr": 100.0   # mm (sub-design negatives)
+  
+  return_period_weights:
+    "100yr": 0.4
+    "500yr": 0.4
+    "10yr": 0.1
+    "25yr": 0.1
+
+# Loss configuration
+loss:
+  type: "bce_dice"  # Options: bce_dice, focal, tversky, bce_tversky, weighted_bce
+  bce_weight: 0.5   # BCE component weight
+  dice_weight: 0.5  # Dice component weight
+  smooth: 1.0       # Smoothing factor
+  
+  # For class imbalance (optional)
+  flood_weight: 3.0  # 2-4x weight for flood class per APPROACH.md
+  
+  # Focal loss parameters (if using focal loss)
+  alpha: 1.0
+  gamma: 2.0
+  
+  # Tversky loss parameters (if using tversky)
+  tversky_alpha: 0.5  # α=0.5 per APPROACH.md
+  tversky_beta: 0.7   # β=0.7 per APPROACH.md
+
+# Training configuration  
+training:
+  # Optimization per APPROACH.md
+  optimizer: "adamw"
+  weight_decay: 1e-5
+  scheduler: "onecycle"  # onecycle or cosine
+  
+  # Learning rates
+  encoder_lr: 1e-4    # Lower LR for pretrained encoder
+  decoder_lr: 1e-3    # Higher LR for new decoder layers
+  
+  # Training schedule
+  freeze_encoder_epochs: 10  # Train decoder first, then unfreeze
+  total_epochs: 60
+  
+  # Batch configuration
+  batch_size: 8       # FP16 batch size
+  accumulate_grad_batches: 1
+  gradient_clip_val: 5.0  # Gradient norm clipping
+  
+  # Mixed precision
+  precision: 16       # 16-bit mixed precision
+  
+  # Validation
+  val_check_interval: 0.5  # Check validation twice per epoch
+  val_split: 0.2      # 20% validation split
+
+# Augmentation configuration
+augmentation:
+  # Hydrology-safe augmentations per APPROACH.md
+  enabled: true
+  p_augment: 0.8
+  
+  # Geometric transforms (safe for hydrology)
+  rotation_90: 0.5    # 90-degree rotations
+  horizontal_flip: 0.3
+  vertical_flip: 0.3
+  small_shift: 0.3    # Small translations only
+  shift_limit: 0.05
+  
+  # Rainfall domain randomization per APPROACH.md  
+  rainfall_variability: 0.15    # ±15% scaling
+  spatial_rainfall_noise: true  # Small spatial gradients
+  noise_strength: 0.05         # Up to 5% spatial noise
+  gradient_strength: 0.1       # Up to 10% spatial gradients
+
+# Metrics configuration
+metrics:
+  # Primary metrics per APPROACH.md
+  threshold: 0.5      # Default threshold (will be tuned)
+  
+  # Metrics to compute
+  compute_iou: true   # Jaccard index (primary metric)
+  compute_f1: true    # F1 score  
+  compute_aucpr: true # Area Under PR Curve (robust with imbalance)
+  compute_auroc: true # Area Under ROC Curve
+  compute_brier: true # Brier score (calibration)
+  
+  # Threshold optimization
+  optimize_threshold: true    # Find optimal threshold via Youden J
+  threshold_method: "youden"  # youden or fixed_precision
+
+# Validation protocol per APPROACH.md
+validation:
+  # Within-city validation
+  method: "spatial_split"  # spatial_split or random_split
+  test_size: 0.2
+  
+  # Ensure held-out neighborhoods
+  min_distance_m: 1000  # Minimum distance between train/val areas
+  
+  # Cross-city validation (when multiple cities available)
+  cross_city_validation: false  # Enable for leave-one-city-out
+
+# Inference configuration
+inference:
+  tile_size: 512
+  tile_overlap: 64
+  batch_size: 4
+  
+  # Uncertainty estimation
+  mc_samples: null      # Number of MC Dropout samples (null = disabled)
+  
+  # Post-processing
+  apply_morphology: true    # Clean small speckles and gaps
+  min_flood_area: 10       # Minimum connected flood area (pixels)
+  
+  # Output formats per APPROACH.md
+  save_probability: true    # flood_prob.tif (float32, 0-1)
+  save_binary: true        # flood_extent.tif (uint8)
+  save_vector: true        # flood_extent.gpkg (polygonized)
+  save_uncertainty: false  # Only if MC samples > 0
+
+# Logging and experiment tracking
+logging:
+  # Weights & Biases
+  wandb:
+    enabled: false
+    project: "floodrisk-ml"
+    tags: ["unet", "resnet34", "flood-prediction"]
+  
+  # MLflow
+  mlflow:
+    enabled: false
+    experiment_name: "flood_prediction"
+    tracking_uri: "mlflow_tracking"
+  
+  # Local logging
+  log_level: "INFO"
+  save_dir: "outputs"
+  
+  # Model checkpointing
+  checkpoint_every_n_epochs: 5
+  save_top_k: 3           # Keep top 3 models by validation IoU
+  monitor: "val_iou"      # Metric to monitor for best model
+  mode: "max"             # Maximize IoU
+
+# Hardware and performance
+hardware:
+  num_workers: 4          # Data loader workers
+  pin_memory: true
+  persistent_workers: true
+  
+  # Multi-GPU (if available)
+  accelerator: "auto"     # auto, cpu, gpu, tpu
+  devices: "auto"         # auto, 1, 2, etc.
+  strategy: "ddp"         # Distributed data parallel
+
+# Reproducibility
+seed: 42
+deterministic: true
+
+# Phase-based configuration per APPROACH.md
+phase:
+  current: "baseline"  # Options: baseline, multiscale, generalization, packaging
+  
+  # Phase 1: Baseline (3-5 days)
+  # Target: IoU ≥ 0.70 on held-out neighborhoods
+  baseline:
+    target_iou: 0.70
+    input_channels: ["dem", "rainfall"]
+    loss_type: "bce_dice"
+    
+  # Phase 2: Multi-scale & features (3-5 days)  
+  multiscale:
+    use_fpn: true
+    add_derived_features: true
+    input_channels: ["dem", "rainfall", "slope", "hand", "flow_accumulation"]
+    
+  # Phase 3: Generalization (1-2 weeks)
+  generalization:
+    enable_cross_city: true
+    few_shot_epochs: 5
+    adaptation_lr: 1e-5
