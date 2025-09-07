@@ -1,3 +1,9 @@
 [submodule "LISFLOOD-FP"]
 	path = LISFLOOD-FP
 	url = https://github.com/LISFLOOD-FP/LISFLOOD-FP.git
+[submodule "reference_models/RapidFloodCNN"]
+	path = reference_models/RapidFloodCNN
+	url = https://github.com/SRKabir/Rapid_FloodModelling_CNN.git
+[submodule "reference_models/UNOSAT"]
+	path = reference_models/UNOSAT
+	url = https://github.com/UNITAR-UNOSAT/UNOSAT-AI-Based-Rapid-Mapping-Service.git

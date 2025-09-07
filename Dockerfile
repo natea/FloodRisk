@@ -1,5 +1,6 @@
 # Multi-stage Dockerfile for FloodRisk application
-FROM python:3.11-slim as base
+# Use bullseye for better GDAL support
+FROM python:3.11-slim-bullseye as base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
