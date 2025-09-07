@@ -28,10 +28,37 @@ from .nfip_validator import NFIPValidator
 from .visualization import FloodVisualization
 from .report_generator import ValidationReportGenerator
 
-__version__ = "1.0.0"
+# New comprehensive validation framework
+from .pipeline_validator import (
+    PipelineValidator,
+    DEMValidator,
+    RainfallValidator,
+    SpatialConsistencyValidator,
+    SimulationValidator,
+    TileQualityValidator,
+    ValidationResult
+)
+
+from .ml_integration_validator import (
+    MLIntegrationValidator,
+    MLDataValidator,
+    ModelPerformanceValidator,
+    LabelQualityValidator
+)
+
+from .qa_dashboard import (
+    QADashboard,
+    QAVisualizer,
+    QAReportGenerator,
+    QAAlertSystem,
+    ValidationDatabase
+)
+
+__version__ = "2.0.0"
 __author__ = "Flood Risk Team"
 
 __all__ = [
+    # Legacy validation components
     'MetricsCalculator',
     'IoUCalculator', 
     'RegressionMetrics',
@@ -40,7 +67,25 @@ __all__ = [
     'LISFLOODValidator',
     'NFIPValidator',
     'FloodVisualization',
-    'ValidationReportGenerator'
+    'ValidationReportGenerator',
+    
+    # New comprehensive validation framework
+    'PipelineValidator',
+    'DEMValidator',
+    'RainfallValidator', 
+    'SpatialConsistencyValidator',
+    'SimulationValidator',
+    'TileQualityValidator',
+    'ValidationResult',
+    'MLIntegrationValidator',
+    'MLDataValidator',
+    'ModelPerformanceValidator',
+    'LabelQualityValidator',
+    'QADashboard',
+    'QAVisualizer',
+    'QAReportGenerator',
+    'QAAlertSystem',
+    'ValidationDatabase'
 ]
 
 
