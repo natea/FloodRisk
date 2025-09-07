@@ -1,0 +1,97 @@
+# Core ML/DL libraries
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.24.0
+scipy>=1.10.0
+
+# Geospatial and scientific computing
+gdal>=3.6.0
+rasterio>=1.3.0
+fiona>=1.9.0
+shapely>=2.0.0
+geopandas>=0.12.0
+xarray>=2023.1.0
+netcdf4>=1.6.0
+pyproj>=3.4.0
+
+# Data manipulation and analysis
+pandas>=1.5.0
+scikit-learn>=1.2.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+plotly>=5.13.0
+
+# Image processing and computer vision
+opencv-python>=4.7.0
+pillow>=9.4.0
+scikit-image>=0.19.0
+
+# Deep learning utilities
+tensorboard>=2.11.0
+pytorch-lightning>=1.9.0
+torchmetrics>=0.11.0
+
+# Hydrology-specific libraries
+richdem>=2.3.0
+whitebox>=2.2.0
+pyflwdir>=0.5.0
+
+# Web framework and API
+fastapi>=0.95.0
+uvicorn[standard]>=0.20.0
+pydantic>=1.10.0
+python-multipart>=0.0.6
+
+# Database and caching
+sqlalchemy>=2.0.0
+alembic>=1.10.0
+redis>=4.5.0
+psycopg2-binary>=2.9.0
+
+# Configuration and environment
+python-dotenv>=1.0.0
+pydantic-settings>=2.0.0
+click>=8.1.0
+
+# Testing
+pytest>=7.2.0
+pytest-asyncio>=0.20.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+httpx>=0.23.0
+
+# Monitoring and logging
+loguru>=0.6.0
+prometheus-client>=0.16.0
+sentry-sdk>=1.15.0
+
+# Development tools
+black>=23.1.0
+isort>=5.12.0
+flake8>=6.0.0
+mypy>=1.0.0
+pre-commit>=3.0.0
+
+# Documentation
+sphinx>=6.0.0
+sphinx-rtd-theme>=1.2.0
+mkdocs>=1.4.0
+mkdocs-material>=9.0.0
+
+# Jupyter and notebooks
+jupyter>=1.0.0
+ipykernel>=6.20.0
+jupyterlab>=3.6.0
+
+# Deployment and containerization
+gunicorn>=20.1.0
+docker>=6.0.0
+
+# Cloud storage and services
+boto3>=1.26.0
+google-cloud-storage>=2.7.0
+azure-storage-blob>=12.14.0
+
+# Parallel processing
+dask[complete]>=2023.1.0
+joblib>=1.2.0

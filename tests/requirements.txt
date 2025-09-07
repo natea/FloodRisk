@@ -1,0 +1,37 @@
+# Testing requirements for FloodRisk integration tests
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+pytest-benchmark>=4.0.0
+pytest-xdist>=3.0.0  # For parallel test execution
+
+# Core dependencies
+numpy>=1.21.0
+torch>=1.12.0
+torchvision>=0.13.0
+scikit-learn>=1.1.0
+scipy>=1.9.0
+
+# Geospatial dependencies
+rasterio>=1.3.0
+richdem>=2.3.0
+
+# Image processing
+scikit-image>=0.19.0
+
+# API testing
+fastapi>=0.85.0
+httpx>=0.23.0  # For TestClient
+requests>=2.28.0
+
+# Performance monitoring
+psutil>=5.9.0
+
+# Development and testing utilities
+black>=22.0.0
+flake8>=5.0.0
+mypy>=0.991
+
+# Optional: For advanced testing
+hypothesis>=6.0.0  # Property-based testing
+factory-boy>=3.2.0  # Test data factories

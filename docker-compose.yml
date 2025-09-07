@@ -1,0 +1,179 @@
+version: '3.8'
+
+services:
+  # Main Flask/FastAPI application
+  app:
+    build:
+      context: .
+      target: development
+    container_name: floodrisk_app
+    ports:
+      - "8000:8000"
+      - "8888:8888"  # Jupyter notebook
+    environment:
+      - DATABASE_URL=postgresql://flooduser:password123@postgres:5432/floodrisk
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - floodrisk-network
+
+  # PostgreSQL database
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: floodrisk_postgres
+    environment:
+      - POSTGRES_DB=floodrisk
+      - POSTGRES_USER=flooduser
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_INITDB_ARGS="--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flooduser -d floodrisk"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - floodrisk-network
+
+  # Redis for caching and task queue
+  redis:
+    image: redis:7-alpine
+    container_name: floodrisk_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - floodrisk-network
+
+  # Celery worker for background tasks
+  worker:
+    build:
+      context: .
+      target: development
+    container_name: floodrisk_worker
+    command: celery -A src.tasks.celery worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://flooduser:password123@postgres:5432/floodrisk
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - floodrisk-network
+
+  # Celery beat for scheduled tasks
+  scheduler:
+    build:
+      context: .
+      target: development
+    container_name: floodrisk_scheduler
+    command: celery -A src.tasks.celery beat --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://flooduser:password123@postgres:5432/floodrisk
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - floodrisk-network
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: floodrisk_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - floodrisk-network
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: floodrisk_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+    networks:
+      - floodrisk-network
+
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: floodrisk_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    restart: unless-stopped
+    networks:
+      - floodrisk-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  floodrisk-network:
+    driver: bridge
