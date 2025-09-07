@@ -55,7 +55,7 @@ python app.py
 
 4. **Open in browser:**
 ```
-http://localhost:8000
+http://localhost:8001
 ```
 
 ## Usage Guide
@@ -179,7 +179,7 @@ python app.py
 ### Docker Deployment
 ```bash
 docker build -t flood-risk-demo .
-docker run -p 8000:8000 flood-risk-demo
+docker run -p 8001:8001 flood-risk-demo
 ```
 
 ### Cloud Deployment (AWS/GCP/Azure)
@@ -201,7 +201,7 @@ docker run -p 8000:8000 flood-risk-demo
 **No predictions appearing:**
 - Ensure clicking within Nashville boundaries
 - Check browser console for errors
-- Verify API is running (http://localhost:8000/health)
+- Verify API is running (http://localhost:8001/health)
 
 **Slow performance:**
 - Close other browser tabs
@@ -235,7 +235,7 @@ This demo is provided for evaluation purposes. Production use requires appropria
 For questions or issues:
 - GitHub Issues: [FloodRisk Repository](https://github.com/natea/FloodRisk)
 - Documentation: See `/docs` folder
-- API Docs: http://localhost:8000/docs (when running)
+- API Docs: http://localhost:8001/docs (when running)
 
 ## Credits
 

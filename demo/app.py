@@ -265,5 +265,5 @@ if os.path.exists("demo/static"):
 if __name__ == "__main__":
     import uvicorn
     print("Starting Nashville Flood Risk Demo Server...")
-    print("Open http://localhost:8000 in your browser")
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    print("Open http://localhost:8001 in your browser")
+    uvicorn.run(app, host="0.0.0.0", port=8001, reload=True)
