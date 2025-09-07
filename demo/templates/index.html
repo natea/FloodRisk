@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nashville Flood Risk Assessment - Interactive Demo</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 350px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .brand-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        .brand-header h3 {
+            color: #007bff;
+            margin: 0;
+            font-weight: bold;
+        }
+        
+        .brand-header p {
+            margin: 5px 0 0 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .scenario-controls {
+            margin-bottom: 20px;
+        }
+        
+        .legend {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #333;
+        }
+        
+        .result-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .result-panel.active {
+            display: block;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .loading-spinner.active {
+            display: block;
+        }
+        
+        .risk-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .risk-low { background: #28a745; }
+        .risk-moderate { background: #ffc107; }
+        .risk-high { background: #fd7e14; }
+        .risk-extreme { background: #dc3545; }
+        
+        .info-popup {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        
+        .marker-pulse {
+            background: rgba(0, 123, 255, 0.3);
+            border-radius: 50%;
+            height: 40px;
+            width: 40px;
+            position: absolute;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="control-panel">
+        <div class="brand-header">
+            <h3><i class="fas fa-water"></i> FloodRisk AI</h3>
+            <p>Nashville Flood Risk Assessment</p>
+        </div>
+        
+        <div class="scenario-controls">
+            <label for="scenario-select" class="form-label">
+                <i class="fas fa-cloud-rain"></i> Rainfall Scenario
+            </label>
+            <select id="scenario-select" class="form-select">
+                <option value="10yr">10-Year Storm (4.86")</option>
+                <option value="25yr">25-Year Storm (5.91")</option>
+                <option value="50yr">50-Year Storm (6.80")</option>
+                <option value="100yr" selected>100-Year Storm (7.75")</option>
+                <option value="500yr">500-Year Storm (10.4")</option>
+            </select>
+            
+            <div class="form-check form-switch mt-3">
+                <input class="form-check-input" type="checkbox" id="show-infrastructure">
+                <label class="form-check-label" for="show-infrastructure">
+                    Show Critical Infrastructure
+                </label>
+            </div>
+            
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="show-claims">
+                <label class="form-check-label" for="show-claims">
+                    Show Historical Claims
+                </label>
+            </div>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-mouse-pointer"></i> Click anywhere on the map to assess flood risk
+        </div>
+        
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Analyzing flood risk...</p>
+        </div>
+        
+        <div class="result-panel" id="result-panel">
+            <h5>Flood Risk Assessment</h5>
+            <div id="result-content"></div>
+        </div>
+        
+        <div class="legend">
+            <h6>Risk Levels</h6>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #28a745;"></div>
+                <span>Low Risk (< 0.1m)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffc107;"></div>
+                <span>Moderate (0.1 - 0.3m)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fd7e14;"></div>
+                <span>High (0.3 - 1.0m)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #dc3545;"></div>
+                <span>Extreme (> 1.0m)</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="info-popup">
+        <strong>Interactive Demo</strong><br>
+        AI-powered flood risk assessment using U-Net CNN model trained on LISFLOOD-FP simulations
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Initialize map centered on Nashville
+        const map = L.map('map').setView([36.1627, -86.7816], 11);
+        
+        // Add base map layers
+        const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri'
+        });
+        
+        // Layer control
+        const baseMaps = {
+            "Street Map": baseLayer,
+            "Satellite": satelliteLayer
+        };
+        
+        L.control.layers(baseMaps).addTo(map);
+        
+        // Risk overlay layer group
+        const riskOverlays = L.layerGroup().addTo(map);
+        const infrastructureLayer = L.layerGroup();
+        const claimsLayer = L.layerGroup();
+        
+        // Current marker
+        let currentMarker = null;
+        let currentCircle = null;
+        
+        // Risk level colors
+        const riskColors = {
+            'low': '#28a745',
+            'moderate': '#ffc107',
+            'high': '#fd7e14',
+            'extreme': '#dc3545'
+        };
+        
+        // Handle map clicks
+        map.on('click', async function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            const scenario = document.getElementById('scenario-select').value;
+            
+            // Remove previous marker
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            if (currentCircle) {
+                map.removeLayer(currentCircle);
+            }
+            
+            // Add new marker
+            currentMarker = L.marker([lat, lng]).addTo(map);
+            
+            // Show loading spinner
+            document.querySelector('.loading-spinner').classList.add('active');
+            document.getElementById('result-panel').classList.remove('active');
+            
+            try {
+                // Call API for prediction
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        latitude: lat,
+                        longitude: lng,
+                        scenario: scenario
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Hide loading spinner
+                document.querySelector('.loading-spinner').classList.remove('active');
+                
+                // Display results
+                displayResults(data, lat, lng);
+                
+                // Add risk visualization circle
+                const color = riskColors[data.risk_level];
+                currentCircle = L.circle([lat, lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.3,
+                    radius: 100 + (data.flood_depth * 200)
+                }).addTo(map);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                // Use mock data for demo
+                const mockData = generateMockPrediction(lat, lng, scenario);
+                
+                // Hide loading spinner
+                document.querySelector('.loading-spinner').classList.remove('active');
+                
+                // Display results
+                displayResults(mockData, lat, lng);
+                
+                // Add risk visualization circle
+                const color = riskColors[mockData.risk_level];
+                currentCircle = L.circle([lat, lng], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.3,
+                    radius: 100 + (mockData.flood_depth * 200)
+                }).addTo(map);
+            }
+        });
+        
+        // Generate mock prediction for demo
+        function generateMockPrediction(lat, lng, scenario) {
+            // Simulate higher risk near rivers and low-lying areas
+            const riversNearby = (
+                Math.abs(lat - 36.1566) < 0.02 && Math.abs(lng - -86.7842) < 0.05 // Cumberland River
+            );
+            
+            const scenarioMultipliers = {
+                '10yr': 0.3,
+                '25yr': 0.5,
+                '50yr': 0.7,
+                '100yr': 1.0,
+                '500yr': 1.5
+            };
+            
+            const baseProbability = riversNearby ? 0.6 : 0.2;
+            const probability = Math.min(baseProbability * scenarioMultipliers[scenario] + Math.random() * 0.2, 0.95);
+            
+            const depth = riversNearby ? 
+                (0.5 + Math.random() * 1.5) * scenarioMultipliers[scenario] :
+                Math.random() * 0.3 * scenarioMultipliers[scenario];
+            
+            let riskLevel = 'low';
+            if (depth > 1.0) riskLevel = 'extreme';
+            else if (depth > 0.3) riskLevel = 'high';
+            else if (depth > 0.1) riskLevel = 'moderate';
+            
+            return {
+                flood_probability: probability,
+                flood_depth: depth,
+                risk_level: riskLevel,
+                confidence: 0.85 + Math.random() * 0.1,
+                elevation: 150 + Math.random() * 50,
+                slope: Math.random() * 5,
+                flow_accumulation: Math.random() * 1000,
+                processing_time: 0.2 + Math.random() * 0.3
+            };
+        }
+        
+        // Display prediction results
+        function displayResults(data, lat, lng) {
+            const resultPanel = document.getElementById('result-panel');
+            const resultContent = document.getElementById('result-content');
+            
+            const riskBadgeClass = `risk-${data.risk_level}`;
+            const riskLabel = data.risk_level.charAt(0).toUpperCase() + data.risk_level.slice(1);
+            
+            resultContent.innerHTML = `
+                <div class="mb-3">
+                    <strong>Location:</strong><br>
+                    ${lat.toFixed(6)}, ${lng.toFixed(6)}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Risk Assessment:</strong>
+                    <div class="risk-badge ${riskBadgeClass}">${riskLabel} Risk</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">${(data.flood_probability * 100).toFixed(1)}%</div>
+                        <div class="stat-label">Flood Probability</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${data.flood_depth.toFixed(2)}m</div>
+                        <div class="stat-label">Expected Depth</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${(data.confidence * 100).toFixed(0)}%</div>
+                        <div class="stat-label">Model Confidence</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${data.processing_time.toFixed(2)}s</div>
+                        <div class="stat-label">Processing Time</div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="mt-3">
+                    <h6>Terrain Features</h6>
+                    <small>
+                        <strong>Elevation:</strong> ${data.elevation.toFixed(1)}m<br>
+                        <strong>Slope:</strong> ${data.slope.toFixed(2)}°<br>
+                        <strong>Flow Accumulation:</strong> ${data.flow_accumulation.toFixed(0)}
+                    </small>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-primary w-100" onclick="downloadReport()">
+                        <i class="fas fa-download"></i> Download Report
+                    </button>
+                </div>
+            `;
+            
+            resultPanel.classList.add('active');
+        }
+        
+        // Add sample infrastructure markers
+        function addInfrastructure() {
+            // Sample critical infrastructure
+            const infrastructure = [
+                {lat: 36.1566, lng: -86.7842, name: "Nissan Stadium", type: "Stadium"},
+                {lat: 36.1744, lng: -86.7679, name: "Vanderbilt Hospital", type: "Hospital"},
+                {lat: 36.1480, lng: -86.8050, name: "Music City Center", type: "Convention Center"}
+            ];
+            
+            infrastructure.forEach(item => {
+                L.marker([item.lat, item.lng], {
+                    icon: L.divIcon({
+                        html: '<i class="fas fa-building" style="color: #007bff;"></i>',
+                        iconSize: [20, 20],
+                        className: 'infrastructure-icon'
+                    })
+                }).addTo(infrastructureLayer)
+                .bindPopup(`<strong>${item.name}</strong><br>${item.type}`);
+            });
+        }
+        
+        // Add sample historical claims
+        function addClaims() {
+            // Generate random claims for demo
+            for (let i = 0; i < 50; i++) {
+                const lat = 36.0 + Math.random() * 0.3;
+                const lng = -86.9 + Math.random() * 0.3;
+                
+                L.circleMarker([lat, lng], {
+                    radius: 5,
+                    fillColor: '#ff0000',
+                    color: '#ff0000',
+                    weight: 1,
+                    opacity: 0.6,
+                    fillOpacity: 0.4
+                }).addTo(claimsLayer)
+                .bindPopup('Historical NFIP Claim<br>$' + (10000 + Math.random() * 90000).toFixed(0));
+            }
+        }
+        
+        // Toggle infrastructure layer
+        document.getElementById('show-infrastructure').addEventListener('change', function(e) {
+            if (e.target.checked) {
+                if (infrastructureLayer.getLayers().length === 0) {
+                    addInfrastructure();
+                }
+                map.addLayer(infrastructureLayer);
+            } else {
+                map.removeLayer(infrastructureLayer);
+            }
+        });
+        
+        // Toggle claims layer
+        document.getElementById('show-claims').addEventListener('change', function(e) {
+            if (e.target.checked) {
+                if (claimsLayer.getLayers().length === 0) {
+                    addClaims();
+                }
+                map.addLayer(claimsLayer);
+            } else {
+                map.removeLayer(claimsLayer);
+            }
+        });
+        
+        // Download report function
+        function downloadReport() {
+            alert('Report download would be implemented here');
+        }
+        
+        // Add Nashville boundary
+        fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/nashville.geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: '#007bff',
+                        weight: 2,
+                        opacity: 0.5,
+                        fillOpacity: 0.1
+                    }
+                }).addTo(map);
+            })
+            .catch(error => console.log('Could not load Nashville boundary'));
+    </script>
+</body>
+</html>

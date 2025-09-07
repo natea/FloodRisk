@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  flood-risk-demo:
+    build: .
+    container_name: nashville-flood-demo
+    ports:
+      - "8000:8000"
+    environment:
+      - API_TITLE=Nashville Flood Risk Demo
+      - API_VERSION=1.0.0
+      - MODEL_VERSION=v2.0
+    volumes:
+      - ./templates:/app/templates
+      - ./static:/app/static
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
