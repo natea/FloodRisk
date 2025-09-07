@@ -4,7 +4,7 @@
 PYTHON := python
 PIP := pip
 DOCKER := docker
-DOCKER_COMPOSE := docker-compose
+DOCKER_COMPOSE := docker compose
 PROJECT_NAME := floodrisk
 
 # Colors for output
