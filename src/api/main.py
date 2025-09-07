@@ -40,6 +40,8 @@ from .utils import (
     APIKeyAuth,
     prediction_count
 )
+from .metrics import MetricsMiddleware, get_metrics as get_prometheus_metrics
+from fastapi.responses import Response
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -82,6 +84,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+# Add Prometheus metrics middleware
+app.add_middleware(MetricsMiddleware)
 
 if not settings.debug:
     app.add_middleware(
@@ -186,6 +191,10 @@ async def predict_flood_risk(
         
         # Track metrics in background
         background_tasks.add_task(track_prediction)
+        
+        # Track Prometheus metrics
+        from .metrics import prediction_count as prom_prediction_count, model_inference_time
+        prom_prediction_count.labels(risk_level=result.get('risk_level', 'unknown')).inc()
         
         logger.info(f"Prediction made for coordinates ({input_data['latitude']}, {input_data['longitude']})")
         
@@ -346,12 +355,33 @@ async def health_check() -> HealthResponse:
 
 @app.get(
     "/metrics",
-    response_model=MetricsResponse,
-    summary="API metrics endpoint",
-    description="Get performance and usage metrics for the API service."
+    summary="Prometheus metrics endpoint",
+    description="Get Prometheus-formatted metrics for monitoring."
 )
-async def get_metrics() -> MetricsResponse:
-    """Get API performance metrics."""
+async def get_metrics() -> Response:
+    """Get Prometheus metrics."""
+    if not settings.enable_metrics:
+        raise HTTPException(status_code=404, detail="Metrics endpoint disabled")
+    
+    try:
+        metrics_data = get_prometheus_metrics()
+        return Response(content=metrics_data, media_type="text/plain")
+        
+    except Exception as e:
+        logger.error(f"Metrics endpoint error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve metrics: {str(e)}"
+        )
+
+@app.get(
+    "/metrics/json",
+    response_model=MetricsResponse,
+    summary="API metrics endpoint (JSON)",
+    description="Get performance and usage metrics for the API service in JSON format."
+)
+async def get_metrics_json() -> MetricsResponse:
+    """Get API performance metrics in JSON format."""
     if not settings.enable_metrics:
         raise HTTPException(status_code=404, detail="Metrics endpoint disabled")
     

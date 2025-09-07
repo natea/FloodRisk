@@ -5,10 +5,12 @@ Run with: python simple_api.py
 """
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 import uvicorn
 from typing import List, Optional
 import random
+import time
 
 # Create FastAPI app
 app = FastAPI(
@@ -117,6 +119,51 @@ def list_models():
             }
         ]
     }
+
+# Basic Prometheus metrics endpoint
+@app.get("/metrics", response_class=PlainTextResponse)
+def get_metrics():
+    """
+    Basic Prometheus metrics endpoint for monitoring.
+    """
+    metrics = []
+    
+    # Basic up metric
+    metrics.append("# HELP up Target is up")
+    metrics.append("# TYPE up gauge")
+    metrics.append("up 1")
+    
+    # Request count (mock)
+    metrics.append("# HELP http_requests_total Total HTTP requests")
+    metrics.append("# TYPE http_requests_total counter")
+    metrics.append(f"http_requests_total{{method=\"GET\",endpoint=\"/health\"}} {random.randint(100, 1000)}")
+    metrics.append(f"http_requests_total{{method=\"POST\",endpoint=\"/api/v1/predict\"}} {random.randint(50, 500)}")
+    
+    # Response time (mock)
+    metrics.append("# HELP http_request_duration_seconds HTTP request duration")
+    metrics.append("# TYPE http_request_duration_seconds histogram")
+    metrics.append(f"http_request_duration_seconds_sum {{method=\"POST\",endpoint=\"/api/v1/predict\"}} {random.uniform(10, 50)}")
+    metrics.append(f"http_request_duration_seconds_count {{method=\"POST\",endpoint=\"/api/v1/predict\"}} {random.randint(50, 500)}")
+    
+    # Prediction metrics (mock)
+    metrics.append("# HELP predictions_total Total predictions made")
+    metrics.append("# TYPE predictions_total counter")
+    metrics.append(f"predictions_total{{risk_level=\"Low\"}} {random.randint(100, 300)}")
+    metrics.append(f"predictions_total{{risk_level=\"Moderate\"}} {random.randint(50, 150)}")
+    metrics.append(f"predictions_total{{risk_level=\"High\"}} {random.randint(20, 80)}")
+    metrics.append(f"predictions_total{{risk_level=\"Extreme\"}} {random.randint(5, 20)}")
+    
+    # CPU usage (mock)
+    metrics.append("# HELP process_cpu_percent CPU usage percentage")
+    metrics.append("# TYPE process_cpu_percent gauge")
+    metrics.append(f"process_cpu_percent {random.uniform(10, 40)}")
+    
+    # Memory usage (mock)
+    metrics.append("# HELP process_memory_bytes Memory usage in bytes")
+    metrics.append("# TYPE process_memory_bytes gauge")
+    metrics.append(f"process_memory_bytes {random.randint(100000000, 500000000)}")
+    
+    return "\n".join(metrics)
 
 if __name__ == "__main__":
     print("\n" + "="*60)
