@@ -1,0 +1,157 @@
+# FloodRisk Data Sources Configuration
+
+# USGS 3D Elevation Program (3DEP) Configuration
+usgs_3dep:
+  description: "USGS 3D Elevation Program DEM data"
+  api_base_url: "https://tnmaccess.nationalmap.gov/api/v1/products"
+  static_service_url: "https://cloud.sdsc.edu/v1/AUTH_opentopography/Raster"
+  
+  # Supported resolutions and their characteristics
+  resolutions:
+    1m:
+      description: "1-meter resolution (limited coverage)"
+      service_preference: ["api"]
+      typical_file_size_mb: 500
+      coverage: "Limited - urban areas and selected regions"
+    10m:
+      description: "10-meter resolution (CONUS coverage)"
+      service_preference: ["static", "api"]
+      typical_file_size_mb: 50
+      coverage: "Complete CONUS, Hawaii, territories"
+    30m:
+      description: "30-meter resolution (global coverage)"
+      service_preference: ["static", "api"]
+      typical_file_size_mb: 10
+      coverage: "Global coverage available"
+
+  # Data formats supported
+  formats:
+    - "GeoTIFF"
+    - "IMG"
+    - "GridFloat"
+
+  # License and usage
+  license: "Public Domain"
+  attribution: "U.S. Geological Survey"
+  usage_restrictions: "None - public domain data"
+
+# NOAA Atlas 14 Precipitation Frequency Configuration
+noaa_atlas14:
+  description: "NOAA Atlas 14 precipitation frequency estimates"
+  pfds_base_url: "https://hdsc.nws.noaa.gov/pfds"
+  api_base_url: "https://pfds.weather.gov/pfds_api"
+  
+  # Standard return periods (years)
+  return_periods: [1, 2, 5, 10, 25, 50, 100, 200, 500, 1000]
+  
+  # Standard durations
+  durations:
+    minutes: [5, 10, 15, 30, 60, 120, 180, 360, 720, 1440, 2880, 4320, 5760, 7200, 8640, 10080, 20160, 30240, 43200, 60480]
+    labels:
+      5: "5-min"
+      10: "10-min"
+      15: "15-min"
+      30: "30-min"
+      60: "60-min"
+      120: "2-hr"
+      180: "3-hr"
+      360: "6-hr"
+      720: "12-hr"
+      1440: "24-hr"
+      2880: "48-hr"
+      4320: "3-day"
+      5760: "4-day"
+      7200: "5-day"
+      8640: "6-day"
+      10080: "7-day"
+      20160: "14-day"
+      30240: "21-day"
+      43200: "30-day"
+      60480: "42-day"
+
+  # Units and series options
+  units:
+    - "english"  # inches
+    - "metric"   # millimeters
+  
+  series:
+    - "pds"      # Partial Duration Series
+    - "ams"      # Annual Maximum Series
+
+  # License and usage
+  license: "Public Domain"
+  attribution: "NOAA National Weather Service"
+  usage_restrictions: "None - public domain data"
+
+# Alternative data sources (for future expansion)
+alternative_sources:
+  nasa_srtm:
+    description: "NASA SRTM 30m global elevation data"
+    base_url: "https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL30.003/"
+    resolution_m: 30
+    coverage: "60°N to 60°S globally"
+    
+  copernicus_dem:
+    description: "Copernicus DEM 30m global elevation data"
+    base_url: "https://registry.opendata.aws/copernicus-dem/"
+    resolution_m: 30
+    coverage: "Global coverage"
+    
+  era5_precipitation:
+    description: "ERA5 reanalysis precipitation data"
+    base_url: "https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels"
+    temporal_resolution: "Hourly"
+    spatial_resolution: "0.25°"
+
+# Regional configurations
+regions:
+  nashville:
+    description: "Nashville, Tennessee metropolitan area"
+    bbox:
+      west: -87.1284
+      south: 35.9728
+      east: -86.4637
+      north: 36.4427
+      crs: 4326
+    recommended_dem_resolution: 10
+    recommended_rainfall_spacing: 0.005  # ~500m
+    
+  tennessee:
+    description: "State of Tennessee"
+    bbox:
+      west: -90.3103
+      south: 34.9829
+      east: -81.6469
+      north: 36.6781
+      crs: 4326
+    recommended_dem_resolution: 30
+    recommended_rainfall_spacing: 0.01  # ~1km
+    
+  middle_tennessee:
+    description: "Middle Tennessee region"
+    bbox:
+      west: -88.2034
+      south: 35.3619
+      east: -85.6060
+      north: 36.6781
+      crs: 4326
+    recommended_dem_resolution: 10
+    recommended_rainfall_spacing: 0.008  # ~800m
+
+# Quality assurance parameters
+quality_assurance:
+  min_file_size_bytes: 1024
+  max_download_retries: 3
+  cache_expiry_days: 30
+  validation_enabled: true
+  
+  dem_validation:
+    min_elevation_m: -500
+    max_elevation_m: 10000
+    min_raster_size: 10
+    required_crs: true
+    
+  rainfall_validation:
+    min_precipitation_mm: 0
+    max_precipitation_mm: 1000  # Very high threshold
+    required_columns: ["return_period_years", "duration_minutes", "precipitation_inches"]

@@ -113,7 +113,9 @@ class FloodUNet(nn.Module):
     def _add_dropout_to_decoder(self):
         """Add dropout layers to decoder for MC Dropout uncertainty estimation."""
         def add_dropout(module):
-            for name, child in module.named_children():
+            # Create a list of children to avoid modifying dictionary during iteration
+            children_list = list(module.named_children())
+            for name, child in children_list:
                 if isinstance(child, (nn.Conv2d, nn.ConvTranspose2d)):
                     # Add dropout after conv layers
                     setattr(module, name + '_dropout', nn.Dropout2d(self.dropout_rate))

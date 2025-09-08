@@ -1,0 +1,275 @@
+# Nashville Flood Risk Modeling Demonstration Configuration
+# Complete end-to-end pipeline configuration for Nashville, TN
+
+# Project Information
+project_name: "nashville_flood_demo"
+project_description: "Nashville, Tennessee flood risk modeling demonstration showcasing complete pipeline integration"
+output_root: "./nashville_demo_output"
+log_level: "INFO"
+
+# Region Configuration - Nashville Metropolitan Area
+region_name: "Nashville, TN"
+bbox:
+  west: -87.0
+  south: 36.0  
+  east: -86.6
+  north: 36.3
+  crs: "EPSG:4326"
+
+# DEM Data Configuration
+dem_source: "usgs_3dep"
+dem_resolution: 10  # meters - good balance of detail and processing speed
+target_crs: "EPSG:3857"  # Web Mercator for processing
+
+# Rainfall Data Configuration
+rainfall_source: "noaa_atlas14"
+return_periods: [10, 25, 50, 100, 500]  # years
+storm_durations: [6, 12, 24]  # hours
+rainfall_patterns: 
+  - "scs_type_ii"    # SCS Type II (front-loaded)
+  - "uniform"        # Uniform distribution
+  - "chicago"        # Chicago design storm
+
+# LISFLOOD-FP Simulation Configuration
+lisflood_binary: null  # Auto-detect
+max_sim_time: 3600.0   # seconds (1 hour simulation)
+output_interval: 300.0  # seconds (5-minute outputs)
+parallel_simulations: 4 # Number of concurrent simulations
+
+# ML Training Configuration
+ml_enabled: true
+tile_size: 256         # pixels - standard for semantic segmentation
+batch_size: 8          # Adjust based on available GPU memory
+max_epochs: 100        # Maximum training epochs
+validation_split: 0.2  # 20% for validation
+
+# Performance and Resource Management
+max_memory_gb: 16.0         # Maximum memory usage
+max_disk_space_gb: 50.0     # Maximum disk space
+cleanup_intermediate: false  # Keep intermediate files for inspection
+enable_checkpointing: true   # Enable pipeline recovery
+checkpoint_interval_minutes: 15.0  # Checkpoint frequency
+
+# Quality Control and Validation
+validation_enabled: true
+strict_validation: false    # Allow minor validation issues
+min_flood_extent_km2: 0.1   # Minimum flood extent to consider valid
+max_flood_extent_km2: 1000.0 # Maximum flood extent threshold
+
+# Advanced Configuration
+
+# DEM Processing Settings
+dem_processing:
+  fill_sinks: true
+  sink_fill_method: "planchon_darboux"
+  flow_method: "d8"
+  min_drainage_area: 500.0    # square meters
+  stream_threshold: 500.0     # flow accumulation threshold
+  smoothing_sigma: 0.5
+  condition_streams: true
+  stream_buffer_distance: 50.0  # meters
+
+# Spatial Processing
+spatial_processing:
+  resampling_method: "bilinear"
+  max_memory_gb: 8.0
+  chunk_size: 1024
+  overlap_pixels: 64
+  enable_parallel: true
+  max_workers: 4
+
+# Rainfall Processing 
+rainfall_processing:
+  time_step_minutes: 15
+  distribution_types: ["scs_type_ii", "uniform", "chicago"]
+  spatial_variability: 0.1
+  temporal_patterns:
+    front_loaded: 0.3
+    back_loaded: 0.7
+    uniform: 1.0
+
+# Feature Extraction
+feature_extraction:
+  compute_curvature: true
+  compute_hand: true      # Height Above Nearest Drainage
+  compute_twi: true       # Topographic Wetness Index
+  compute_spi: true       # Stream Power Index
+  compute_tri: true       # Terrain Ruggedness Index
+  hand_max_distance: 2000.0  # meters
+  roughness_window: 5
+  curvature_smoothing: 0.5
+
+# ML Model Configuration
+model:
+  architecture: "UNet"
+  encoder: "resnet34"
+  encoder_weights: "imagenet"
+  in_channels: 8          # DEM + derived features + rainfall
+  classes: 1              # Binary flood/no-flood
+  activation: "sigmoid"
+
+# Training Configuration
+training:
+  optimizer: "AdamW"
+  scheduler: "onecycle"
+  decoder_lr: 0.001
+  encoder_lr: 0.0001      # Lower learning rate for pretrained encoder
+  weight_decay: 0.0001
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  val_check_interval: 1.0
+  freeze_encoder_epochs: 5  # Freeze encoder for first 5 epochs
+  total_epochs: 100
+  precision: 16           # Mixed precision training
+
+# Loss Configuration
+loss:
+  type: "combined"
+  components:
+    - name: "dice"
+      weight: 0.5
+    - name: "focal"
+      weight: 0.3
+      alpha: 0.25
+      gamma: 2.0
+    - name: "boundary"
+      weight: 0.2
+
+# Metrics Configuration
+metrics:
+  threshold: 0.5
+  compute_auc: true
+  compute_precision_recall: true
+
+# Hardware Configuration
+hardware:
+  accelerator: "auto"     # auto, cpu, gpu, mps
+  devices: 1              # Number of devices
+  strategy: "auto"        # Training strategy
+  num_workers: 4          # Data loader workers
+  pin_memory: true
+  persistent_workers: true
+
+# Logging Configuration
+logging:
+  save_dir: "./logs"
+  monitor: "val_iou"
+  mode: "max"
+  save_top_k: 3
+  checkpoint_every_n_epochs: 10
+  
+  wandb:
+    enabled: false        # Set to true if using Weights & Biases
+    project: "flood-prediction"
+    tags: ["nashville", "demo", "unet"]
+  
+  tensorboard:
+    enabled: true
+
+# Data Augmentation
+augmentation:
+  enabled: true
+  p_augment: 0.5
+  rainfall_variability: 0.15  # ±15% rainfall variation
+  spatial_rainfall_noise: true
+  
+# Reproducibility
+seed: 42
+deterministic: true
+
+# Output Configuration
+output:
+  save_intermediate: true
+  compress: true
+  compression_method: "lzw"
+  dtype: "float32"
+  nodata_value: -9999
+
+# Quality Control Ranges
+quality_control:
+  elevation_range:
+    min: 100.0    # meters above sea level
+    max: 400.0    # meters above sea level
+  slope_range:
+    min: 0.0      # degrees
+    max: 45.0     # degrees
+  flow_accumulation_range:
+    min: 1.0
+    max: 1000000.0
+  hand_range:
+    min: 0.0      # meters
+    max: 100.0    # meters
+
+# Known Issues and Limitations
+known_issues:
+  urban_noise: "Urban areas may have artifacts from buildings/structures"
+  water_bodies: "Large water bodies should be masked appropriately"  
+  bridges: "Bridge crossings may create flow discontinuities"
+  model_generalization: "ML model trained on Nashville may not generalize to other regions"
+
+# Resource Estimation (for planning purposes)
+resource_estimates:
+  estimated_runtime_hours: 2.0    # Full pipeline runtime estimate
+  estimated_memory_peak_gb: 12.0  # Peak memory usage
+  estimated_disk_usage_gb: 25.0   # Total disk space needed
+  minimum_system_requirements:
+    ram_gb: 8
+    disk_gb: 30
+    cpu_cores: 4
+    gpu_memory_gb: 6  # Optional but recommended
+
+# Demonstration-Specific Settings
+demo_settings:
+  # Reduced parameters for faster demonstration
+  quick_mode: false              # Set to true for very fast demo
+  max_simulations: 20            # Limit number of simulations
+  reduced_resolution_factor: 1   # Factor to reduce DEM resolution (1 = no reduction)
+  
+  # Visualization settings
+  generate_plots: true
+  plot_formats: ["png", "pdf"]
+  create_animations: false       # Set to true for flood animation
+  
+  # Validation settings
+  compare_with_observed: false   # Set to true if observed flood data available
+  benchmark_performance: true    # Benchmark against simple models
+  
+  # Export settings
+  export_formats: ["geotiff", "netcdf", "shapefile"]
+  coordinate_systems: ["EPSG:4326", "EPSG:3857"]  # Export in multiple CRS
+
+# Contact and Attribution
+metadata:
+  created_by: "FloodRisk ML Pipeline"
+  version: "1.0.0"
+  created_date: "2024-01-15"
+  last_modified: "2024-01-15"
+  
+  data_sources:
+    dem: "USGS 3D Elevation Program (3DEP)"
+    precipitation: "NOAA Atlas 14 Precipitation Frequency"
+    
+  citations:
+    dem: "U.S. Geological Survey, 3D Elevation Program 10-meter resolution digital elevation model"
+    precipitation: "NOAA Atlas 14, Precipitation-Frequency Atlas of the United States, Volume 2"
+    lisflood: "Bates, P.D., Horritt, M.S. and Fewtrell, T.J., 2010. A simple inertial formulation of the shallow water equations for efficient two-dimensional flood inundation modelling. Journal of Hydrology, 387(1-2), pp.33-45."
+    
+  license: "MIT License - See LICENSE file for details"
+  
+# Notes for Users
+user_notes: |
+  This configuration file demonstrates the complete Nashville flood risk modeling pipeline.
+  
+  Key points:
+  - The pipeline will download ~500MB of DEM data for Nashville
+  - Simulation runtime is approximately 2 hours on a modern desktop
+  - ML training requires significant compute resources (GPU recommended)
+  - Results include flood extent maps, depth grids, and trained ML model
+  
+  To run the demonstration:
+    python examples/nashville_demo.py --config config/nashville_demo_config.yaml
+  
+  For a quick validation run:
+    python examples/nashville_demo.py --dry-run
+  
+  Modify the configuration as needed for your system and requirements.
