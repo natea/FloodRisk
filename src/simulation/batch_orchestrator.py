@@ -111,12 +111,13 @@ class SimulationBatch:
             'total_scenarios': len(self.scenarios),
             'return_periods': [rp.__dict__ for rp in return_periods],
             'hyetograph_patterns': [hp.__dict__ for hp in hyetograph_patterns],
-            'config': self.config.__dict__
+            'config': {k: v for k, v in self.config.__dict__.items() 
+                      if not callable(v)}
         }
         
         # Save batch metadata
         with open(batch_dir / "batch_metadata.json", 'w') as f:
-            json.dump(batch_metadata, f, indent=2)
+            json.dump(batch_metadata, f, indent=2, default=str)
         
         logger.info(f"Created batch {self.batch_id} with {len(self.scenarios)} scenarios")
         return self.batch_id
@@ -144,12 +145,13 @@ class SimulationBatch:
             'output_dir': str(batch_dir),
             'total_scenarios': len(self.scenarios),
             'scenarios': self.scenarios,
-            'config': self.config.__dict__
+            'config': {k: v for k, v in self.config.__dict__.items() 
+                      if not callable(v)}
         }
         
         # Save batch metadata
         with open(batch_dir / "batch_metadata.json", 'w') as f:
-            json.dump(batch_metadata, f, indent=2)
+            json.dump(batch_metadata, f, indent=2, default=str)
         
         logger.info(f"Created batch {self.batch_id} with {len(self.scenarios)} scenarios")
         return self.batch_id
@@ -330,8 +332,11 @@ class SimulationBatch:
         """Convert scenario dictionary to SimulationConfig."""
         config_dict = scenario['config']
         
+        # Use original DEM file path for copying, not the basename
+        dem_file = scenario.get('original_dem_file', config_dict['dem_file'])
+        
         return SimulationConfig(
-            dem_file=config_dict['dem_file'],
+            dem_file=dem_file,
             rainfall_file=scenario['rainfall_file'],
             manning_file=config_dict.get('manning_file'), 
             infiltration_file=config_dict.get('infiltration_file'),
@@ -407,9 +412,10 @@ class SimulationBatch:
             'success_count': len(successful_results),
             'failure_count': len(failed_results),
             'success_rate': len(successful_results) / total_scenarios if total_scenarios > 0 else 0,
-            'failed_scenarios': [r['scenario_id'] for r in failed_results],
+            'failed_scenarios': [r.get('scenario_id', 'unknown') for r in failed_results],
             'statistics_summary': stats_summary,
-            'config': self.config.__dict__,
+            'config': {k: v for k, v in self.config.__dict__.items() 
+                      if not callable(v)},
             'successful_results': successful_results,
             'failed_results': failed_results
         }
@@ -471,11 +477,11 @@ class SimulationBatch:
         
         # Save summary
         with open(batch_dir / "batch_summary.json", 'w') as f:
-            json.dump(summary, f, indent=2)
+            json.dump(summary, f, indent=2, default=str)
         
         # Save detailed results
         with open(batch_dir / "batch_results.json", 'w') as f:
-            json.dump(self.results, f, indent=2)
+            json.dump(self.results, f, indent=2, default=str)
         
         logger.info(f"Batch results saved to {batch_dir}")
     
@@ -500,7 +506,8 @@ class SimulationBatch:
         
         training_data = {}
         for result in successful_results:
-            scenario_id = result['scenario_id']
+            # Handle both scenario_id and simulation_id keys
+            scenario_id = result.get('scenario_id', result.get('simulation_id', 'unknown'))
             if 'outputs' in result and 'extent_file' in result['outputs']:
                 extent_file = result['outputs']['extent_file']
                 if Path(extent_file).exists():
@@ -513,7 +520,7 @@ class SimulationBatch:
         
         # Save manifest
         with open(output_file, 'w') as f:
-            json.dump(training_data, f, indent=2)
+            json.dump(training_data, f, indent=2, default=str)
         
         logger.info(f"Exported {len(training_data)} training data paths to {output_file}")
         

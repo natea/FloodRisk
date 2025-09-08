@@ -233,8 +233,10 @@ def cmd_batch(args) -> int:
         total = progress_info['total']
         current = progress_info['current_result']
         
+        # Handle both scenario_id and simulation_id keys
+        sim_id = current.get('scenario_id', current.get('simulation_id', 'unknown'))
         logger.info(f"Progress: {completed}/{total} ({100*completed/total:.1f}%) - "
-                   f"{current['simulation_id']}: {current['status']}")
+                   f"{sim_id}: {current['status']}")
     
     batch_config.progress_callback = progress_callback
     

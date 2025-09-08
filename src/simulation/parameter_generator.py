@@ -115,7 +115,7 @@ class ParameterFileGenerator:
                 # Generate parameter file
                 par_config = self._create_parameter_config(
                     dem_file=dem_file,
-                    rainfall_file=rainfall_file,
+                    rainfall_file=str(rainfall_file),
                     scenario_id=scenario_id,
                     base_config=base_simulation_config
                 )
@@ -133,6 +133,8 @@ class ParameterFileGenerator:
                     'parameter_file': str(par_file),
                     'rainfall_file': str(rainfall_file),
                     'config': par_config,
+                    # Store original paths for file copying
+                    'original_dem_file': dem_file,
                     'created_at': datetime.now().isoformat()
                 }
                 
@@ -242,8 +244,9 @@ class ParameterFileGenerator:
                                base_config: Optional[Dict] = None) -> Dict:
         """Create parameter configuration dictionary."""
         # Start with default configuration
+        # Use just the filename since files are copied to the sim directory
         config = {
-            'dem_file': dem_file,
+            'dem_file': os.path.basename(dem_file),
             'rainfall_file': os.path.basename(rainfall_file),
             'manning_file': self.default_files['manning_file'],
             'infiltration_file': self.default_files['infiltration_file'],
@@ -316,7 +319,7 @@ class ParameterFileGenerator:
         }
         
         with open(output_file, 'w') as f:
-            json.dump(manifest, f, indent=2)
+            json.dump(manifest, f, indent=2, default=str)
         
         logger.info(f"Saved scenario manifest: {output_file}")
     

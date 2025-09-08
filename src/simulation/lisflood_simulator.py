@@ -176,15 +176,15 @@ class LisfloodSimulator:
         par_content.append(f"# Generated: {datetime.now().isoformat()}")
         par_content.append("")
         
-        # Essential parameters
-        par_content.append(f"DEMfile\t\t\t{config.dem_file}")
+        # Essential parameters - use basename since files are copied to sim_dir
+        par_content.append(f"DEMfile\t\t\t{os.path.basename(config.dem_file)}")
         par_content.append(f"resroot\t\t\t{config.output_prefix}")
         par_content.append(f"dirroot\t\t\t{config.output_directory}")
         par_content.append(f"sim_time\t\t{config.sim_time}")
         par_content.append(f"initial_tstep\t\t{config.initial_timestep}")
         
-        # Input files
-        par_content.append(f"rainfall\t\t{config.rainfall_file}")
+        # Input files - use basename since files are copied to sim_dir
+        par_content.append(f"rainfall\t\t{os.path.basename(config.rainfall_file)}")
         par_content.append(f"manningfile\t\t{config.manning_file}")
         par_content.append(f"infiltration\t\t{config.infiltration_file}")
         
@@ -223,13 +223,16 @@ class LisfloodSimulator:
         
         for file_path in files_to_copy:
             if not os.path.isabs(file_path):
-                # Assume relative to LISFLOOD-FP/Nashville
-                source = Path("LISFLOOD-FP/Nashville") / file_path
+                # Check if file exists relative to current directory first
+                source = Path(file_path)
+                if not source.exists():
+                    # Try relative to LISFLOOD-FP/Nashville as fallback
+                    source = Path("LISFLOOD-FP/Nashville") / file_path
             else:
                 source = Path(file_path)
             
             if not source.exists():
-                raise FileNotFoundError(f"Input file not found: {source}")
+                raise FileNotFoundError(f"Input file not found: {file_path}")
             
             dest = sim_dir / source.name
             shutil.copy2(source, dest)
@@ -237,7 +240,11 @@ class LisfloodSimulator:
     
     def _execute_lisflood(self, par_file: str, sim_dir: Path, max_hours: float) -> subprocess.CompletedProcess:
         """Execute LISFLOOD-FP simulation."""
-        cmd = [self.lisflood_exe, par_file]
+        # Ensure executable path is absolute
+        lisflood_exe_abs = os.path.abspath(self.lisflood_exe)
+        # Use just the filename for the parameter file (not full path)
+        par_filename = os.path.basename(par_file)
+        cmd = [lisflood_exe_abs, par_filename]
         
         logger.info(f"Executing LISFLOOD-FP: {' '.join(cmd)}")
         logger.info(f"Working directory: {sim_dir}")
