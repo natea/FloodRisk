@@ -11,9 +11,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin, urlencode
 import requests
 from pyproj import CRS, Transformer
+import logging
 
 from .base import BaseDataSource, DataSourceError
 from ..config import BoundingBox, DataConfig
+from .noaa_atlas14_local import NOAAAtlas14LocalLoader
+
+logger = logging.getLogger(__name__)
 
 
 class NOAAAtlas14Fetcher(BaseDataSource):
@@ -213,13 +217,64 @@ class NOAAAtlas14Fetcher(BaseDataSource):
                 cache_path.replace(output_path)
             return output_path
         
-        self.logger.warning(f"NOAA PFDS CSV API is deprecated. Generating sample precipitation data for point ({lon:.4f}, {lat:.4f})")
+        # Check for local CSV files first
+        local_csv_paths = [
+            self.config.data_dir / "regions" / "nashville" / "rainfall" / "All_Depth_English_PDS.csv",
+            Path("/Users/nateaune/Documents/code/FloodRisk/data/regions/nashville/rainfall/All_Depth_English_PDS.csv"),
+            output_dir / "All_Depth_English_PDS.csv"
+        ]
         
-        try:
+        local_csv = None
+        for csv_path in local_csv_paths:
+            if csv_path.exists():
+                local_csv = csv_path
+                self.logger.info(f"Found local NOAA Atlas 14 CSV: {csv_path}")
+                break
+        
+        if local_csv:
+            # Use local CSV data
+            try:
+                loader = NOAAAtlas14LocalLoader(local_csv)
+                
+                # Get precipitation depths for requested return periods and durations
+                data_rows = []
+                for rp in return_periods:
+                    row = {'return_period_years': rp}
+                    for duration_min in durations_min:
+                        # Convert minutes to NOAA duration string
+                        duration_str = self._minutes_to_duration_string(duration_min)
+                        try:
+                            depth_inches = loader.get_precipitation_depth(duration_str, rp)
+                            # Convert inches to mm
+                            depth_mm = depth_inches * 25.4
+                            row[f'duration_{duration_min}_min'] = depth_mm
+                        except (KeyError, ValueError) as e:
+                            self.logger.warning(f"Could not get {duration_str} {rp}-year data: {e}")
+                            # Use approximate value
+                            row[f'duration_{duration_min}_min'] = self._estimate_precipitation(rp, duration_min)
+                    data_rows.append(row)
+                
+                # Add metadata
+                metadata = loader.data.get('metadata', {})
+                for row in data_rows:
+                    row['latitude'] = metadata.get('latitude', lat)
+                    row['longitude'] = metadata.get('longitude', lon)
+                    row['station'] = metadata.get('station', 'Nashville WSO Airport')
+                    row['source'] = 'NOAA Atlas 14 Local CSV'
+                
+                df = pd.DataFrame(data_rows)
+                self.logger.info(f"Loaded precipitation data from local CSV for {len(return_periods)} return periods")
+                
+            except Exception as e:
+                self.logger.warning(f"Failed to load local CSV: {e}. Falling back to synthetic data.")
+                df = self._generate_sample_atlas14_data(return_periods, durations_min, lat, lon)
+        else:
+            self.logger.warning(f"No local NOAA Atlas 14 CSV found. Generating sample precipitation data for point ({lon:.4f}, {lat:.4f})")
             # Generate sample precipitation frequency data
             # These are approximate values for the southeastern US (Nashville area)
             df = self._generate_sample_atlas14_data(return_periods, durations_min, lat, lon)
-            
+        
+        try:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             df.to_csv(output_path, index=False)
             
@@ -227,11 +282,11 @@ class NOAAAtlas14Fetcher(BaseDataSource):
             if cache_path != output_path:
                 df.to_csv(cache_path, index=False)
             
-            self.logger.info(f"Generated sample Atlas 14 data: {output_path}")
+            self.logger.info(f"Saved Atlas 14 data: {output_path}")
             return output_path
                 
         except Exception as e:
-            raise DataSourceError(f"Error generating Atlas 14 data: {e}")
+            raise DataSourceError(f"Error saving Atlas 14 data: {e}")
     
     def download_region_data(
         self,
@@ -366,6 +421,50 @@ class NOAAAtlas14Fetcher(BaseDataSource):
         
         df = pd.DataFrame(records)
         return df
+    
+    def _minutes_to_duration_string(self, minutes: int) -> str:
+        """Convert minutes to NOAA duration string format.
+        
+        Args:
+            minutes: Duration in minutes
+            
+        Returns:
+            Duration string (e.g., '24-hr', '60-min')
+        """
+        duration_map = {
+            5: '5-min', 10: '10-min', 15: '15-min', 30: '30-min',
+            60: '60-min', 120: '2-hr', 180: '3-hr', 360: '6-hr',
+            720: '12-hr', 1440: '24-hr', 2880: '2-day', 4320: '3-day',
+            5760: '4-day', 10080: '7-day', 14400: '10-day', 28800: '20-day',
+            43200: '30-day', 64800: '45-day', 86400: '60-day'
+        }
+        return duration_map.get(minutes, f'{minutes}-min')
+    
+    def _estimate_precipitation(self, return_period: int, duration_min: int) -> float:
+        """Estimate precipitation depth based on return period and duration.
+        
+        Args:
+            return_period: Return period in years
+            duration_min: Duration in minutes
+            
+        Returns:
+            Estimated precipitation depth in mm
+        """
+        # Base values for 24-hour duration (mm)
+        base_24hr = {
+            10: 100, 25: 125, 50: 150, 100: 175, 500: 225, 1000: 250
+        }
+        
+        # Get base value or interpolate
+        if return_period in base_24hr:
+            base_value = base_24hr[return_period]
+        else:
+            # Simple linear interpolation
+            base_value = 100 + (return_period - 10) * 1.5
+        
+        # Adjust for duration
+        duration_factor = (duration_min / 1440) ** 0.5  # 1440 minutes = 24 hours
+        return base_value * duration_factor
     
     def _generate_sample_atlas14_data(
         self,
