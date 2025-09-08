@@ -1,0 +1,5 @@
+file,return_period_years,duration_hours,min_precipitation_mm,max_precipitation_mm,mean_precipitation_mm,std_precipitation_mm,p10_mm,p50_mm,p90_mm,grid_shape,resolution_degrees,ensemble_members
+noaa_25yr_24hr.npz,25,24,,,,,,,,"(41, 61)",0.01,20
+noaa_100yr_12hr.npz,100,12,,,,,,,,"(41, 61)",0.01,20
+noaa_100yr_24hr.npz,100,24,,,,,,,,"(41, 61)",0.01,20
+noaa_100yr_6hr.npz,100,6,,,,,,,,"(41, 61)",0.01,20
