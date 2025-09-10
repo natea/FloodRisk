@@ -231,7 +231,7 @@ class FloodLightningModule(pl.LightningModule):
         # Training configuration
         self.automatic_optimization = False  # Manual optimization for freeze/unfreeze
         self.freeze_encoder_epochs = config.training.freeze_encoder_epochs
-        self.current_epoch = 0
+        self._current_epoch = 0  # Use private variable to avoid conflict with Lightning's property
         
         logger.info(f"Initialized FloodLightningModule with {sum(p.numel() for p in self.model.parameters()):,} parameters")
     
@@ -299,14 +299,14 @@ class FloodLightningModule(pl.LightningModule):
     
     def on_train_epoch_start(self):
         """Handle encoder freezing/unfreezing per APPROACH.md."""
-        if self.current_epoch < self.freeze_encoder_epochs:
+        if self._current_epoch < self.freeze_encoder_epochs:
             # Freeze encoder
             self._freeze_encoder()
         else:
             # Unfreeze encoder
             self._unfreeze_encoder()
             
-        self.current_epoch += 1
+        self._current_epoch += 1
     
     def _freeze_encoder(self):
         """Freeze encoder parameters."""
@@ -465,7 +465,7 @@ def train_model(config: DictConfig):
         devices=config.hardware.devices,
         strategy=config.hardware.strategy if config.hardware.devices != 1 else "auto",
         precision=config.training.precision,
-        gradient_clip_val=config.training.gradient_clip_val,
+        # gradient_clip_val handled manually in training_step due to manual optimization
         accumulate_grad_batches=config.training.accumulate_grad_batches,
         val_check_interval=config.training.val_check_interval,
         deterministic=config.deterministic,

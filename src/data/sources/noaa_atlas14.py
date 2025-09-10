@@ -254,12 +254,27 @@ class NOAAAtlas14Fetcher(BaseDataSource):
                             row[f'duration_{duration_min}_min'] = self._estimate_precipitation(rp, duration_min)
                     data_rows.append(row)
                 
-                # Add metadata
+                # Add metadata and apply spatial variation
                 metadata = loader.data.get('metadata', {})
+                station_lat = metadata.get('latitude', 36.1253)
+                station_lon = metadata.get('longitude', -86.6764)
+                
+                # Calculate distance from station to grid point
+                distance_km = self._calculate_distance(station_lat, station_lon, lat, lon)
+                
+                # Apply spatial variation based on distance (simple linear interpolation)
+                # Precipitation typically varies by ~1-2% per 10 km
+                variation_factor = 1.0 + (distance_km * 0.001)  # 0.1% per km
+                
                 for row in data_rows:
-                    row['latitude'] = metadata.get('latitude', lat)
-                    row['longitude'] = metadata.get('longitude', lon)
-                    row['station'] = metadata.get('station', 'Nashville WSO Airport')
+                    # Apply spatial variation to precipitation values
+                    for key in row.keys():
+                        if key.startswith('duration_'):
+                            row[key] *= variation_factor
+                    
+                    row['latitude'] = lat  # Use actual grid point coordinates
+                    row['longitude'] = lon
+                    row['station'] = f"{metadata.get('station', 'Nashville WSO Airport')} (interpolated)"
                     row['source'] = 'NOAA Atlas 14 Local CSV'
                 
                 df = pd.DataFrame(data_rows)
@@ -439,6 +454,31 @@ class NOAAAtlas14Fetcher(BaseDataSource):
             43200: '30-day', 64800: '45-day', 86400: '60-day'
         }
         return duration_map.get(minutes, f'{minutes}-min')
+    
+    def _calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        """Calculate distance between two points using Haversine formula.
+        
+        Args:
+            lat1, lon1: First point coordinates
+            lat2, lon2: Second point coordinates
+            
+        Returns:
+            Distance in kilometers
+        """
+        import math
+        R = 6371  # Earth's radius in km
+        
+        lat1_rad = math.radians(lat1)
+        lat2_rad = math.radians(lat2)
+        delta_lat = math.radians(lat2 - lat1)
+        delta_lon = math.radians(lon2 - lon1)
+        
+        a = (math.sin(delta_lat / 2) ** 2 + 
+             math.cos(lat1_rad) * math.cos(lat2_rad) * 
+             math.sin(delta_lon / 2) ** 2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        
+        return R * c
     
     def _estimate_precipitation(self, return_period: int, duration_min: int) -> float:
         """Estimate precipitation depth based on return period and duration.

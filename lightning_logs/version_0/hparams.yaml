@@ -1,0 +1,139 @@
+model:
+  type: unet
+  in_channels: 2
+  num_classes: 1
+  encoder_name: resnet34
+  encoder_weights: imagenet
+  dropout_rate: 0.2
+  use_fpn: false
+data:
+  tile_size: 512
+  tile_overlap: 64
+  resolution: 10.0
+  target_crs: EPSG:3857
+  input_features:
+  - dem
+  - rainfall
+  balanced_sampling:
+    enabled: true
+    flood_threshold: 0.02
+    flooded_ratio: 0.7
+  return_periods:
+    100yr: 150.0
+    500yr: 200.0
+    10yr: 75.0
+    25yr: 100.0
+  return_period_weights:
+    100yr: 0.4
+    500yr: 0.4
+    10yr: 0.1
+    25yr: 0.1
+loss:
+  type: bce_dice
+  bce_weight: 0.5
+  dice_weight: 0.5
+  smooth: 1.0
+  flood_weight: 3.0
+  alpha: 1.0
+  gamma: 2.0
+  tversky_alpha: 0.5
+  tversky_beta: 0.7
+training:
+  optimizer: adamw
+  weight_decay: 1.0e-05
+  scheduler: onecycle
+  encoder_lr: 0.0001
+  decoder_lr: 0.001
+  freeze_encoder_epochs: 10
+  total_epochs: 60
+  batch_size: 8
+  accumulate_grad_batches: 1
+  gradient_clip_val: 5.0
+  precision: 16
+  val_check_interval: 0.5
+  val_split: 0.2
+augmentation:
+  enabled: true
+  p_augment: 0.8
+  rotation_90: 0.5
+  horizontal_flip: 0.3
+  vertical_flip: 0.3
+  small_shift: 0.3
+  shift_limit: 0.05
+  rainfall_variability: 0.15
+  spatial_rainfall_noise: true
+  noise_strength: 0.05
+  gradient_strength: 0.1
+metrics:
+  threshold: 0.5
+  compute_iou: true
+  compute_f1: true
+  compute_aucpr: true
+  compute_auroc: true
+  compute_brier: true
+  optimize_threshold: true
+  threshold_method: youden
+validation:
+  method: spatial_split
+  test_size: 0.2
+  min_distance_m: 1000
+  cross_city_validation: false
+inference:
+  tile_size: 512
+  tile_overlap: 64
+  batch_size: 4
+  mc_samples: null
+  apply_morphology: true
+  min_flood_area: 10
+  save_probability: true
+  save_binary: true
+  save_vector: true
+  save_uncertainty: false
+logging:
+  wandb:
+    enabled: false
+    project: floodrisk-ml
+    tags:
+    - unet
+    - resnet34
+    - flood-prediction
+  mlflow:
+    enabled: false
+    experiment_name: flood_prediction
+    tracking_uri: mlflow_tracking
+  log_level: INFO
+  save_dir: outputs
+  checkpoint_every_n_epochs: 5
+  save_top_k: 3
+  monitor: val_iou
+  mode: max
+hardware:
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  accelerator: auto
+  devices: auto
+  strategy: auto
+seed: 42
+deterministic: true
+phase:
+  current: baseline
+  baseline:
+    target_iou: 0.7
+    input_channels:
+    - dem
+    - rainfall
+    loss_type: bce_dice
+  multiscale:
+    use_fpn: true
+    add_derived_features: true
+    input_channels:
+    - dem
+    - rainfall
+    - slope
+    - hand
+    - flow_accumulation
+  generalization:
+    enable_cross_city: true
+    few_shot_epochs: 5
+    adaptation_lr: 1.0e-05

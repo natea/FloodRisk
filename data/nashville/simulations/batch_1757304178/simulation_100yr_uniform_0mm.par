@@ -1,0 +1,15 @@
+# LISFLOOD-FP parameter file - Auto-generated
+# Generated: 2025-09-08T00:02:58.678484
+# Scenario: res_100yr_uniform_0mm
+
+DEMfile			data/nashville/dem/nashville_dem_10m_1.tif
+resroot			res_100yr_uniform_0mm
+dirroot			results_100yr_uniform_0mm
+sim_time		86400.0
+initial_tstep		10.0
+rainfall		rainfall_100yr_uniform_0mm.rain
+manningfile		manning.asc
+infiltration		infiltration.asc
+depthoff
+elevoff
+acceleration

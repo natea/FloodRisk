@@ -192,7 +192,7 @@ hardware:
   # Multi-GPU (if available)
   accelerator: "auto"     # auto, cpu, gpu, tpu
   devices: "auto"         # auto, 1, 2, etc.
-  strategy: "ddp"         # Distributed data parallel
+  strategy: "auto"        # auto selects appropriate strategy for device
 
 # Reproducibility
 seed: 42

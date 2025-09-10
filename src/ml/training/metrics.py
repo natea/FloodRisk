@@ -9,9 +9,9 @@ from sklearn.metrics import (
     precision_recall_curve, 
     average_precision_score,
     roc_auc_score,
-    brier_score_loss,
-    calibration_curve
+    brier_score_loss
 )
+from sklearn.calibration import calibration_curve
 from typing import Tuple, Dict, Optional
 import logging
 

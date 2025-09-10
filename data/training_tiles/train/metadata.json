@@ -1,0 +1,128 @@
+[
+  {
+    "tile_id": 7,
+    "tile_name": "tile_00007.tif",
+    "source_file": "test_dem.tiff",
+    "row": 2,
+    "col": 1,
+    "x_start": 448,
+    "y_start": 512,
+    "width": 512,
+    "height": 512,
+    "valid_pixel_ratio": 1.0,
+    "bounds": [
+      -86.6804,
+      35.193799999999996,
+      -86.1684,
+      35.705799999999996
+    ]
+  },
+  {
+    "tile_id": 1,
+    "tile_name": "tile_00001.tif",
+    "source_file": "test_dem.tiff",
+    "row": 0,
+    "col": 1,
+    "x_start": 448,
+    "y_start": 0,
+    "width": 512,
+    "height": 512,
+    "valid_pixel_ratio": 1.0,
+    "bounds": [
+      -86.6804,
+      35.705799999999996,
+      -86.1684,
+      36.2178
+    ]
+  },
+  {
+    "tile_id": 5,
+    "tile_name": "tile_00005.tif",
+    "source_file": "test_dem.tiff",
+    "row": 1,
+    "col": 2,
+    "x_start": 512,
+    "y_start": 448,
+    "width": 512,
+    "height": 512,
+    "valid_pixel_ratio": 1.0,
+    "bounds": [
+      -86.6164,
+      35.257799999999996,
+      -86.1044,
+      35.7698
+    ]
+  },
+  {
+    "tile_id": 0,
+    "tile_name": "tile_00000.tif",
+    "source_file": "test_dem.tiff",
+    "row": 0,
+    "col": 0,
+    "x_start": 0,
+    "y_start": 0,
+    "width": 512,
+    "height": 512,
+    "valid_pixel_ratio": 1.0,
+    "bounds": [
+      -87.1284,
+      35.705799999999996,
+      -86.6164,
+      36.2178
+    ]
+  },
+  {
+    "tile_id": 8,
+    "tile_name": "tile_00008.tif",
+    "source_file": "test_dem.tiff",
+    "row": 2,
+    "col": 2,
+    "x_start": 512,
+    "y_start": 512,
+    "width": 512,
+    "height": 512,
+    "valid_pixel_ratio": 1.0,
+    "bounds": [
+      -86.6164,
+      35.193799999999996,
+      -86.1044,
+      35.705799999999996
+    ]
+  },
+  {
+    "tile_id": 2,
+    "tile_name": "tile_00002.tif",
+    "source_file": "test_dem.tiff",
+    "row": 0,
+    "col": 2,
+    "x_start": 512,
+    "y_start": 0,
+    "width": 512,
+    "height": 512,
+    "valid_pixel_ratio": 1.0,
+    "bounds": [
+      -86.6164,
+      35.705799999999996,
+      -86.1044,
+      36.2178
+    ]
+  },
+  {
+    "tile_id": 4,
+    "tile_name": "tile_00004.tif",
+    "source_file": "test_dem.tiff",
+    "row": 1,
+    "col": 1,
+    "x_start": 448,
+    "y_start": 448,
+    "width": 512,
+    "height": 512,
+    "valid_pixel_ratio": 1.0,
+    "bounds": [
+      -86.6804,
+      35.257799999999996,
+      -86.1684,
+      35.7698
+    ]
+  }
+]

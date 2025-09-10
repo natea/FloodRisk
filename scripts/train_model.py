@@ -131,7 +131,7 @@ def main():
         
         # Run training with Hydra
         import hydra
-        from hydra import compose, initialize_config_store
+        from hydra import compose, initialize
         from hydra.core.config_store import ConfigStore
         
         # Register config
@@ -139,7 +139,7 @@ def main():
         cs.store(name="config", node=config)
         
         # Initialize and run
-        with initialize_config_store(config_path=None):
+        with initialize(version_base=None, config_path=None):
             cfg = compose(config_name="config")
             trainer, model = train_model(cfg)
             

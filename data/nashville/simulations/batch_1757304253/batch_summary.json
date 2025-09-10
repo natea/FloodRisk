@@ -1,0 +1,115 @@
+{
+  "batch_id": "batch_1757304253",
+  "start_time": "2025-09-08T00:04:14.107455",
+  "end_time": "2025-09-08T00:05:00.245905",
+  "runtime_seconds": 46.13845,
+  "total_scenarios": 2,
+  "success_count": 0,
+  "failure_count": 2,
+  "success_rate": 0.0,
+  "failed_scenarios": [
+    "unknown",
+    "unknown"
+  ],
+  "statistics_summary": {},
+  "config": {
+    "max_parallel_jobs": 4,
+    "max_retries": 2,
+    "retry_delay_seconds": 60.0,
+    "max_memory_gb": null,
+    "max_disk_space_gb": null,
+    "validate_results": true,
+    "cleanup_failed_runs": false,
+    "keep_intermediate_files": false,
+    "result_callback": null
+  },
+  "successful_results": [],
+  "failed_results": [
+    {
+      "simulation_id": "500yr_uniform_0mm",
+      "status": "failed",
+      "start_time": "2025-09-08T00:04:14.115302",
+      "end_time": "2025-09-08T00:05:00.245131",
+      "runtime_seconds": 46.129829,
+      "error": "LISFLOOD-FP execution failed: ERROR: Loading DEM. Aborting.\tdata/nashville/dem/nashville_dem_10m_1.tif\n",
+      "working_directory": "data/nashville/simulations/simulations/500yr_uniform_0mm",
+      "scenario": {
+        "scenario_id": "500yr_uniform_0mm",
+        "return_period": {
+          "return_period_years": 500,
+          "rainfall_depth_24h_mm": 222.25,
+          "description": "500-year extreme event",
+          "is_sub_design": false
+        },
+        "hyetograph": {
+          "pattern_type": "uniform",
+          "total_depth_mm": 0,
+          "duration_hours": 24.0,
+          "timestep_hours": 1.0,
+          "peak_hour": null,
+          "front_factor": 2.0,
+          "center_factor": 3.0
+        },
+        "parameter_file": "data/nashville/simulations/batch_1757304253/simulation_500yr_uniform_0mm.par",
+        "rainfall_file": "data/nashville/simulations/batch_1757304253/rainfall_500yr_uniform_0mm.rain",
+        "config": {
+          "dem_file": "data/nashville/dem/nashville_dem_10m_1.tif",
+          "rainfall_file": "rainfall_500yr_uniform_0mm.rain",
+          "manning_file": "manning.asc",
+          "infiltration_file": "infiltration.asc",
+          "output_prefix": "res_500yr_uniform_0mm",
+          "output_directory": "results_500yr_uniform_0mm",
+          "sim_time": 86400.0,
+          "initial_timestep": 10.0,
+          "acceleration": true,
+          "depthoff": true,
+          "elevoff": true
+        },
+        "created_at": "2025-09-08T00:04:14.106993"
+      }
+    },
+    {
+      "simulation_id": "100yr_uniform_0mm",
+      "status": "failed",
+      "start_time": "2025-09-08T00:04:14.115259",
+      "end_time": "2025-09-08T00:05:00.245430",
+      "runtime_seconds": 46.130171,
+      "error": "LISFLOOD-FP execution failed: ERROR: Loading DEM. Aborting.\tdata/nashville/dem/nashville_dem_10m_1.tif\n",
+      "working_directory": "data/nashville/simulations/simulations/100yr_uniform_0mm",
+      "scenario": {
+        "scenario_id": "100yr_uniform_0mm",
+        "return_period": {
+          "return_period_years": 100,
+          "rainfall_depth_24h_mm": 177.8,
+          "description": "100-year design storm",
+          "is_sub_design": false
+        },
+        "hyetograph": {
+          "pattern_type": "uniform",
+          "total_depth_mm": 0,
+          "duration_hours": 24.0,
+          "timestep_hours": 1.0,
+          "peak_hour": null,
+          "front_factor": 2.0,
+          "center_factor": 3.0
+        },
+        "parameter_file": "data/nashville/simulations/batch_1757304253/simulation_100yr_uniform_0mm.par",
+        "rainfall_file": "data/nashville/simulations/batch_1757304253/rainfall_100yr_uniform_0mm.rain",
+        "config": {
+          "dem_file": "data/nashville/dem/nashville_dem_10m_1.tif",
+          "rainfall_file": "rainfall_100yr_uniform_0mm.rain",
+          "manning_file": "manning.asc",
+          "infiltration_file": "infiltration.asc",
+          "output_prefix": "res_100yr_uniform_0mm",
+          "output_directory": "results_100yr_uniform_0mm",
+          "sim_time": 86400.0,
+          "initial_timestep": 10.0,
+          "acceleration": true,
+          "depthoff": true,
+          "elevoff": true
+        },
+        "created_at": "2025-09-08T00:04:14.106660"
+      }
+    }
+  ]
+}

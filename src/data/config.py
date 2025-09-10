@@ -75,7 +75,7 @@ class DataConfig:
     
     # Data validation settings
     validate_downloads: bool = True
-    min_file_size_bytes: int = 1024
+    min_file_size_bytes: int = 500  # Lowered to accommodate small CSV files
     
     # Regional configurations
     regions: Dict[str, BoundingBox] = field(default_factory=dict)
