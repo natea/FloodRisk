@@ -15,11 +15,6 @@ from .sources.noaa_atlas14 import NOAAAtlas14Fetcher
 from .manager import DataManager
 from .config import DataConfig
 
-__all__ = [
-    'USGS3DEPDownloader',
-    'NOAAAtlas14Fetcher', 
-    'DataManager',
-    'DataConfig'
-]
+__all__ = ["USGS3DEPDownloader", "NOAAAtlas14Fetcher", "DataManager", "DataConfig"]
 
-__version__ = '0.1.0'
+__version__ = "0.1.0"

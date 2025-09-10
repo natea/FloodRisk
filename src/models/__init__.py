@@ -13,16 +13,16 @@ from .flood_cnn import (
     RainfallScalingModule,
     AttentionFusion,
     FloodModelTrainer,
-    create_flood_model
+    create_flood_model,
 )
 
 __all__ = [
-    'FloodDepthPredictor',
-    'PhysicsInformedLoss',
-    'DimensionlessFeatureProcessor',
-    'MultiScaleInputProcessor',
-    'RainfallScalingModule',
-    'AttentionFusion',
-    'FloodModelTrainer',
-    'create_flood_model'
+    "FloodDepthPredictor",
+    "PhysicsInformedLoss",
+    "DimensionlessFeatureProcessor",
+    "MultiScaleInputProcessor",
+    "RainfallScalingModule",
+    "AttentionFusion",
+    "FloodModelTrainer",
+    "create_flood_model",
 ]

@@ -7,10 +7,12 @@ A comprehensive flood risk prediction system using machine learning and hydrolog
 __version__ = "0.1.0"
 __author__ = "FloodRisk Development Team"
 __email__ = "info@floodrisk.com"
-__description__ = "Flood depth prediction system using machine learning and hydrological modeling"
+__description__ = (
+    "Flood depth prediction system using machine learning and hydrological modeling"
+)
 
 # Version info
-VERSION_INFO = tuple(int(part) for part in __version__.split('.'))
+VERSION_INFO = tuple(int(part) for part in __version__.split("."))
 
 # Package metadata
 __all__ = [

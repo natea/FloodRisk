@@ -20,13 +20,13 @@ from .metadata_tracker import SimulationMetadata
 from .preprocessing_integration import PreprocessingIntegration
 
 __all__ = [
-    'LisfloodSimulator',
-    'ParameterFileGenerator', 
-    'SimulationBatch',
-    'ResultProcessor',
-    'SimulationValidator',
-    'SimulationMetadata',
-    'PreprocessingIntegration'
+    "LisfloodSimulator",
+    "ParameterFileGenerator",
+    "SimulationBatch",
+    "ResultProcessor",
+    "SimulationValidator",
+    "SimulationMetadata",
+    "PreprocessingIntegration",
 ]
 
-__version__ = '1.0.0'
+__version__ = "1.0.0"

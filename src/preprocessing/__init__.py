@@ -17,13 +17,13 @@ from .patch_extractor import PatchExtractor, PatchInfo
 from .normalizer import DataNormalizer, NormalizationParams
 
 __all__ = [
-    'DEMProcessor',
-    'TerrainFeatureExtractor', 
-    'RainfallGenerator',
-    'PatchExtractor',
-    'PatchInfo',
-    'DataNormalizer',
-    'NormalizationParams'
+    "DEMProcessor",
+    "TerrainFeatureExtractor",
+    "RainfallGenerator",
+    "PatchExtractor",
+    "PatchInfo",
+    "DataNormalizer",
+    "NormalizationParams",
 ]
 
-__version__ = '0.1.0'
+__version__ = "0.1.0"

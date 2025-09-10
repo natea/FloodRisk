@@ -31,8 +31,12 @@ def setup_logging(log_level: str = "INFO"):
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.StreamHandler(sys.stdout),
-            logging.FileHandler("logs/api.log") if os.path.exists("logs") else logging.NullHandler()
-        ]
+            (
+                logging.FileHandler("logs/api.log")
+                if os.path.exists("logs")
+                else logging.NullHandler()
+            ),
+        ],
     )
 
 
@@ -43,27 +47,31 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="Port to bind to")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-    parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
-    parser.add_argument("--workers", type=int, default=1, help="Number of worker processes")
-    
+    parser.add_argument(
+        "--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"]
+    )
+    parser.add_argument(
+        "--workers", type=int, default=1, help="Number of worker processes"
+    )
+
     args = parser.parse_args()
-    
+
     # Setup logging
     setup_logging(args.log_level)
-    
+
     # Get settings
     settings = get_settings()
-    
+
     # Override settings with command line arguments
     host = args.host or settings.host
     port = args.port or settings.port
-    
+
     print(f"Starting FloodRisk API Server on {host}:{port}")
     print(f"Environment: {'development' if args.debug else 'production'}")
     print(f"Debug mode: {args.debug}")
     print(f"Auto-reload: {args.reload}")
     print("---")
-    
+
     # Configure uvicorn
     config = {
         "app": "src.api.main:app",
@@ -73,19 +81,21 @@ def main():
         "reload": args.reload,
         "workers": 1 if args.reload else args.workers,  # Can't use workers with reload
     }
-    
+
     # Add SSL configuration if certificates are available
     ssl_keyfile = os.getenv("SSL_KEYFILE")
     ssl_certfile = os.getenv("SSL_CERTFILE")
-    
+
     if ssl_keyfile and ssl_certfile:
         if os.path.exists(ssl_keyfile) and os.path.exists(ssl_certfile):
-            config.update({
-                "ssl_keyfile": ssl_keyfile,
-                "ssl_certfile": ssl_certfile,
-            })
+            config.update(
+                {
+                    "ssl_keyfile": ssl_keyfile,
+                    "ssl_certfile": ssl_certfile,
+                }
+            )
             print(f"SSL enabled with cert: {ssl_certfile}")
-    
+
     try:
         uvicorn.run(**config)
     except KeyboardInterrupt:

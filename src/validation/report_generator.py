@@ -3,7 +3,7 @@ Validation Report Generator
 
 Generates comprehensive validation reports for flood risk models including:
 - HTML reports with interactive visualizations
-- PDF reports for formal documentation  
+- PDF reports for formal documentation
 - Executive summaries for stakeholders
 - Technical detailed reports for researchers
 - Comparison reports across multiple models
@@ -24,6 +24,7 @@ import tempfile
 
 try:
     from jinja2 import Template, Environment, FileSystemLoader
+
     HAS_JINJA2 = True
 except ImportError:
     HAS_JINJA2 = False
@@ -31,6 +32,7 @@ except ImportError:
 
 try:
     import weasyprint
+
     HAS_WEASYPRINT = True
 except ImportError:
     HAS_WEASYPRINT = False
@@ -39,6 +41,7 @@ except ImportError:
 try:
     import plotly.graph_objects as go
     import plotly.io as pio
+
     HAS_PLOTLY = True
 except ImportError:
     HAS_PLOTLY = False
@@ -54,6 +57,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ReportConfig:
     """Configuration for report generation"""
+
     title: str = "Flood Risk Model Validation Report"
     subtitle: str = ""
     author: str = "Validation System"
@@ -74,310 +78,352 @@ class HTMLReportGenerator:
     """
     Generates HTML validation reports with interactive content
     """
-    
+
     def __init__(self, config: ReportConfig):
         """
         Initialize HTML report generator
-        
+
         Args:
             config: Report configuration
         """
         self.config = config
         self.visualizer = FloodVisualization()
         logger.info("HTML Report Generator initialized")
-    
-    def generate_html_report(self, validation_results: Dict, 
-                           output_path: str,
-                           additional_data: Optional[Dict] = None) -> str:
+
+    def generate_html_report(
+        self,
+        validation_results: Dict,
+        output_path: str,
+        additional_data: Optional[Dict] = None,
+    ) -> str:
         """
         Generate comprehensive HTML report
-        
+
         Args:
             validation_results: Results from validation analysis
             output_path: Path for output HTML file
             additional_data: Additional data to include in report
-            
+
         Returns:
             Path to generated HTML report
         """
         try:
             logger.info(f"Generating HTML report: {output_path}")
-            
+
             # Prepare report data
             report_data = self._prepare_report_data(validation_results, additional_data)
-            
+
             # Generate report sections
             sections = self._generate_report_sections(report_data)
-            
+
             # Create HTML content
             html_content = self._create_html_content(sections)
-            
+
             # Write to file
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
-            
+
             logger.info(f"HTML report generated successfully: {output_path}")
             return output_path
-            
+
         except Exception as e:
             logger.error(f"Error generating HTML report: {e}")
             raise RuntimeError(f"HTML report generation failed: {e}")
-    
-    def _prepare_report_data(self, validation_results: Dict, 
-                           additional_data: Optional[Dict] = None) -> Dict:
+
+    def _prepare_report_data(
+        self, validation_results: Dict, additional_data: Optional[Dict] = None
+    ) -> Dict:
         """
         Prepare and structure data for report generation
         """
         logger.info("Preparing report data")
-        
+
         # Base report data
         report_data = {
-            'config': asdict(self.config),
-            'generation_timestamp': datetime.now().isoformat(),
-            'validation_results': validation_results,
-            'metadata': validation_results.get('metadata', {}),
-            'additional_data': additional_data or {}
+            "config": asdict(self.config),
+            "generation_timestamp": datetime.now().isoformat(),
+            "validation_results": validation_results,
+            "metadata": validation_results.get("metadata", {}),
+            "additional_data": additional_data or {},
         }
-        
+
         # Extract key metrics for summary
-        report_data['key_metrics'] = self._extract_key_metrics(validation_results)
-        
+        report_data["key_metrics"] = self._extract_key_metrics(validation_results)
+
         # Calculate performance grades
-        report_data['performance_grades'] = self._calculate_performance_grades(validation_results)
-        
+        report_data["performance_grades"] = self._calculate_performance_grades(
+            validation_results
+        )
+
         # Generate recommendations
-        report_data['recommendations'] = self._generate_recommendations(validation_results)
-        
+        report_data["recommendations"] = self._generate_recommendations(
+            validation_results
+        )
+
         return report_data
-    
+
     def _extract_key_metrics(self, validation_results: Dict) -> Dict:
         """
         Extract key metrics for executive summary
         """
         key_metrics = {}
-        
-        standard_metrics = validation_results.get('standard_metrics', {})
-        
+
+        standard_metrics = validation_results.get("standard_metrics", {})
+
         # IoU Score
-        if 'iou' in standard_metrics:
-            key_metrics['iou_score'] = {
-                'value': standard_metrics['iou'].get('iou', 0),
-                'label': 'Intersection over Union',
-                'description': 'Overlap accuracy of flood extents',
-                'range': [0, 1],
-                'higher_better': True
+        if "iou" in standard_metrics:
+            key_metrics["iou_score"] = {
+                "value": standard_metrics["iou"].get("iou", 0),
+                "label": "Intersection over Union",
+                "description": "Overlap accuracy of flood extents",
+                "range": [0, 1],
+                "higher_better": True,
             }
-        
+
         # F1 Score
-        if 'classification' in standard_metrics and 'error' not in standard_metrics['classification']:
-            key_metrics['f1_score'] = {
-                'value': standard_metrics['classification'].get('f1_score', 0),
-                'label': 'F1 Score',
-                'description': 'Balance of precision and recall',
-                'range': [0, 1],
-                'higher_better': True
+        if (
+            "classification" in standard_metrics
+            and "error" not in standard_metrics["classification"]
+        ):
+            key_metrics["f1_score"] = {
+                "value": standard_metrics["classification"].get("f1_score", 0),
+                "label": "F1 Score",
+                "description": "Balance of precision and recall",
+                "range": [0, 1],
+                "higher_better": True,
             }
-        
+
         # RMSE
-        if 'regression' in standard_metrics and 'error' not in standard_metrics['regression']:
-            key_metrics['rmse'] = {
-                'value': standard_metrics['regression'].get('rmse', 0),
-                'label': 'Root Mean Square Error',
-                'description': 'Average prediction error magnitude',
-                'range': [0, float('inf')],
-                'higher_better': False,
-                'unit': 'm'
+        if (
+            "regression" in standard_metrics
+            and "error" not in standard_metrics["regression"]
+        ):
+            key_metrics["rmse"] = {
+                "value": standard_metrics["regression"].get("rmse", 0),
+                "label": "Root Mean Square Error",
+                "description": "Average prediction error magnitude",
+                "range": [0, float("inf")],
+                "higher_better": False,
+                "unit": "m",
             }
-        
+
         # Nash-Sutcliffe Efficiency
-        if 'regression' in standard_metrics and 'nse' in standard_metrics['regression']:
-            key_metrics['nse'] = {
-                'value': standard_metrics['regression']['nse'],
-                'label': 'Nash-Sutcliffe Efficiency',
-                'description': 'Model efficiency compared to mean',
-                'range': [-float('inf'), 1],
-                'higher_better': True
+        if "regression" in standard_metrics and "nse" in standard_metrics["regression"]:
+            key_metrics["nse"] = {
+                "value": standard_metrics["regression"]["nse"],
+                "label": "Nash-Sutcliffe Efficiency",
+                "description": "Model efficiency compared to mean",
+                "range": [-float("inf"), 1],
+                "higher_better": True,
             }
-        
+
         # Critical Success Index
-        if 'csi' in standard_metrics:
-            key_metrics['csi'] = {
-                'value': standard_metrics['csi'].get('csi', 0),
-                'label': 'Critical Success Index',
-                'description': 'Threat score for categorical forecasts',
-                'range': [0, 1],
-                'higher_better': True
+        if "csi" in standard_metrics:
+            key_metrics["csi"] = {
+                "value": standard_metrics["csi"].get("csi", 0),
+                "label": "Critical Success Index",
+                "description": "Threat score for categorical forecasts",
+                "range": [0, 1],
+                "higher_better": True,
             }
-        
+
         return key_metrics
-    
+
     def _calculate_performance_grades(self, validation_results: Dict) -> Dict:
         """
         Calculate letter grades for different aspects of performance
         """
         grades = {}
-        
-        standard_metrics = validation_results.get('standard_metrics', {})
-        
+
+        standard_metrics = validation_results.get("standard_metrics", {})
+
         # Flood extent accuracy grade (based on IoU)
-        if 'iou' in standard_metrics:
-            iou_score = standard_metrics['iou'].get('iou', 0)
-            grades['flood_extent'] = self._score_to_grade(iou_score)
-        
+        if "iou" in standard_metrics:
+            iou_score = standard_metrics["iou"].get("iou", 0)
+            grades["flood_extent"] = self._score_to_grade(iou_score)
+
         # Classification performance grade (based on F1)
-        if 'classification' in standard_metrics and 'error' not in standard_metrics['classification']:
-            f1_score = standard_metrics['classification'].get('f1_score', 0)
-            grades['classification'] = self._score_to_grade(f1_score)
-        
+        if (
+            "classification" in standard_metrics
+            and "error" not in standard_metrics["classification"]
+        ):
+            f1_score = standard_metrics["classification"].get("f1_score", 0)
+            grades["classification"] = self._score_to_grade(f1_score)
+
         # Depth accuracy grade (based on normalized RMSE)
-        if 'regression' in standard_metrics and 'error' not in standard_metrics['regression']:
-            rmse = standard_metrics['regression'].get('rmse', float('inf'))
+        if (
+            "regression" in standard_metrics
+            and "error" not in standard_metrics["regression"]
+        ):
+            rmse = standard_metrics["regression"].get("rmse", float("inf"))
             # Normalize RMSE (assuming max reasonable depth is 10m)
             normalized_rmse = min(rmse / 10.0, 1.0)
             rmse_score = 1.0 - normalized_rmse
-            grades['depth_accuracy'] = self._score_to_grade(rmse_score)
-        
+            grades["depth_accuracy"] = self._score_to_grade(rmse_score)
+
         # Overall grade (average of available grades)
         if grades:
             grade_values = [self._grade_to_numeric(g) for g in grades.values()]
             overall_numeric = np.mean(grade_values)
-            grades['overall'] = self._numeric_to_grade(overall_numeric)
-        
+            grades["overall"] = self._numeric_to_grade(overall_numeric)
+
         return grades
-    
+
     def _score_to_grade(self, score: float) -> str:
         """Convert numeric score to letter grade"""
         if score >= 0.9:
-            return 'A'
+            return "A"
         elif score >= 0.8:
-            return 'B'
+            return "B"
         elif score >= 0.7:
-            return 'C'
+            return "C"
         elif score >= 0.6:
-            return 'D'
+            return "D"
         else:
-            return 'F'
-    
+            return "F"
+
     def _grade_to_numeric(self, grade: str) -> float:
         """Convert letter grade to numeric value"""
-        grade_map = {'A': 4.0, 'B': 3.0, 'C': 2.0, 'D': 1.0, 'F': 0.0}
+        grade_map = {"A": 4.0, "B": 3.0, "C": 2.0, "D": 1.0, "F": 0.0}
         return grade_map.get(grade, 0.0)
-    
+
     def _numeric_to_grade(self, numeric: float) -> str:
         """Convert numeric value to letter grade"""
         if numeric >= 3.5:
-            return 'A'
+            return "A"
         elif numeric >= 2.5:
-            return 'B'
+            return "B"
         elif numeric >= 1.5:
-            return 'C'
+            return "C"
         elif numeric >= 0.5:
-            return 'D'
+            return "D"
         else:
-            return 'F'
-    
+            return "F"
+
     def _generate_recommendations(self, validation_results: Dict) -> List[Dict]:
         """
         Generate actionable recommendations based on validation results
         """
         recommendations = []
-        
-        standard_metrics = validation_results.get('standard_metrics', {})
-        
+
+        standard_metrics = validation_results.get("standard_metrics", {})
+
         # IoU-based recommendations
-        if 'iou' in standard_metrics:
-            iou_score = standard_metrics['iou'].get('iou', 0)
+        if "iou" in standard_metrics:
+            iou_score = standard_metrics["iou"].get("iou", 0)
             if iou_score < 0.5:
-                recommendations.append({
-                    'priority': 'High',
-                    'category': 'Model Accuracy',
-                    'issue': 'Poor flood extent prediction',
-                    'recommendation': 'Review model parameters, topographic data quality, and boundary conditions. Consider recalibration with local flood events.',
-                    'metric': f'IoU Score: {iou_score:.3f}'
-                })
+                recommendations.append(
+                    {
+                        "priority": "High",
+                        "category": "Model Accuracy",
+                        "issue": "Poor flood extent prediction",
+                        "recommendation": "Review model parameters, topographic data quality, and boundary conditions. Consider recalibration with local flood events.",
+                        "metric": f"IoU Score: {iou_score:.3f}",
+                    }
+                )
             elif iou_score > 0.85:
-                recommendations.append({
-                    'priority': 'Low',
-                    'category': 'Model Performance',
-                    'issue': 'Excellent flood extent prediction',
-                    'recommendation': 'Model performs well for flood extent prediction. Consider operational deployment with regular monitoring.',
-                    'metric': f'IoU Score: {iou_score:.3f}'
-                })
-        
+                recommendations.append(
+                    {
+                        "priority": "Low",
+                        "category": "Model Performance",
+                        "issue": "Excellent flood extent prediction",
+                        "recommendation": "Model performs well for flood extent prediction. Consider operational deployment with regular monitoring.",
+                        "metric": f"IoU Score: {iou_score:.3f}",
+                    }
+                )
+
         # RMSE-based recommendations
-        if 'regression' in standard_metrics and 'error' not in standard_metrics['regression']:
-            rmse = standard_metrics['regression'].get('rmse', 0)
+        if (
+            "regression" in standard_metrics
+            and "error" not in standard_metrics["regression"]
+        ):
+            rmse = standard_metrics["regression"].get("rmse", 0)
             if rmse > 1.0:
-                recommendations.append({
-                    'priority': 'High',
-                    'category': 'Depth Accuracy',
-                    'issue': 'High depth prediction errors',
-                    'recommendation': 'Investigate bathymetric data accuracy, friction parameters, and model resolution. Consider ensemble modeling approaches.',
-                    'metric': f'RMSE: {rmse:.3f}m'
-                })
-        
+                recommendations.append(
+                    {
+                        "priority": "High",
+                        "category": "Depth Accuracy",
+                        "issue": "High depth prediction errors",
+                        "recommendation": "Investigate bathymetric data accuracy, friction parameters, and model resolution. Consider ensemble modeling approaches.",
+                        "metric": f"RMSE: {rmse:.3f}m",
+                    }
+                )
+
         # False alarm recommendations
-        if 'classification' in standard_metrics and 'error' not in standard_metrics['classification']:
-            far = standard_metrics['classification'].get('false_alarm_rate', 0)
+        if (
+            "classification" in standard_metrics
+            and "error" not in standard_metrics["classification"]
+        ):
+            far = standard_metrics["classification"].get("false_alarm_rate", 0)
             if far > 0.3:
-                recommendations.append({
-                    'priority': 'Medium',
-                    'category': 'False Alarms',
-                    'issue': 'High false alarm rate',
-                    'recommendation': 'Review threshold settings and consider post-processing filters to reduce false positives. Validate against local knowledge.',
-                    'metric': f'False Alarm Rate: {far:.3f}'
-                })
-        
+                recommendations.append(
+                    {
+                        "priority": "Medium",
+                        "category": "False Alarms",
+                        "issue": "High false alarm rate",
+                        "recommendation": "Review threshold settings and consider post-processing filters to reduce false positives. Validate against local knowledge.",
+                        "metric": f"False Alarm Rate: {far:.3f}",
+                    }
+                )
+
         # Nash-Sutcliffe recommendations
-        if 'regression' in standard_metrics and 'nse' in standard_metrics['regression']:
-            nse = standard_metrics['regression']['nse']
+        if "regression" in standard_metrics and "nse" in standard_metrics["regression"]:
+            nse = standard_metrics["regression"]["nse"]
             if nse < 0:
-                recommendations.append({
-                    'priority': 'Critical',
-                    'category': 'Model Performance',
-                    'issue': 'Model performs worse than mean',
-                    'recommendation': 'Model shows poor performance. Complete model review recommended including data quality, physical processes, and parameterization.',
-                    'metric': f'Nash-Sutcliffe Efficiency: {nse:.3f}'
-                })
-        
+                recommendations.append(
+                    {
+                        "priority": "Critical",
+                        "category": "Model Performance",
+                        "issue": "Model performs worse than mean",
+                        "recommendation": "Model shows poor performance. Complete model review recommended including data quality, physical processes, and parameterization.",
+                        "metric": f"Nash-Sutcliffe Efficiency: {nse:.3f}",
+                    }
+                )
+
         return recommendations
-    
+
     def _generate_report_sections(self, report_data: Dict) -> Dict:
         """
         Generate content for each report section
         """
         logger.info("Generating report sections")
-        
+
         sections = {}
-        
+
         # Executive Summary
         if self.config.include_executive_summary:
-            sections['executive_summary'] = self._generate_executive_summary(report_data)
-        
+            sections["executive_summary"] = self._generate_executive_summary(
+                report_data
+            )
+
         # Methodology
         if self.config.include_methodology:
-            sections['methodology'] = self._generate_methodology_section()
-        
+            sections["methodology"] = self._generate_methodology_section()
+
         # Results
         if self.config.include_detailed_results:
-            sections['detailed_results'] = self._generate_results_section(report_data)
-        
+            sections["detailed_results"] = self._generate_results_section(report_data)
+
         # Visualizations
         if self.config.include_visualizations:
-            sections['visualizations'] = self._generate_visualizations_section(report_data)
-        
+            sections["visualizations"] = self._generate_visualizations_section(
+                report_data
+            )
+
         # Recommendations
         if self.config.include_recommendations:
-            sections['recommendations'] = self._generate_recommendations_section(report_data)
-        
+            sections["recommendations"] = self._generate_recommendations_section(
+                report_data
+            )
+
         return sections
-    
+
     def _generate_executive_summary(self, report_data: Dict) -> str:
         """Generate executive summary section"""
-        
-        key_metrics = report_data.get('key_metrics', {})
-        performance_grades = report_data.get('performance_grades', {})
-        
+
+        key_metrics = report_data.get("key_metrics", {})
+        performance_grades = report_data.get("performance_grades", {})
+
         summary = f"""
         <div class="executive-summary">
             <h2>Executive Summary</h2>
@@ -389,17 +435,17 @@ class HTMLReportGenerator:
                 
                 <div class="key-metrics-grid">
         """
-        
+
         # Add key metrics cards
         for metric_key, metric_data in key_metrics.items():
-            value = metric_data['value']
+            value = metric_data["value"]
             if isinstance(value, float):
                 value_str = f"{value:.3f}"
-                if metric_data.get('unit'):
+                if metric_data.get("unit"):
                     value_str += f" {metric_data['unit']}"
             else:
                 value_str = str(value)
-            
+
             summary += f"""
                     <div class="metric-card">
                         <div class="metric-value">{value_str}</div>
@@ -407,7 +453,7 @@ class HTMLReportGenerator:
                         <div class="metric-description">{metric_data['description']}</div>
                     </div>
             """
-        
+
         summary += """
                 </div>
             </div>
@@ -420,12 +466,12 @@ class HTMLReportGenerator:
             </div>
         </div>
         """
-        
+
         return summary
-    
+
     def _generate_methodology_section(self) -> str:
         """Generate methodology section"""
-        
+
         return """
         <div class="methodology">
             <h2>Validation Methodology</h2>
@@ -452,21 +498,21 @@ class HTMLReportGenerator:
             where appropriate.</p>
         </div>
         """
-    
+
     def _generate_results_section(self, report_data: Dict) -> str:
         """Generate detailed results section"""
-        
-        validation_results = report_data['validation_results']
-        standard_metrics = validation_results.get('standard_metrics', {})
-        
+
+        validation_results = report_data["validation_results"]
+        standard_metrics = validation_results.get("standard_metrics", {})
+
         results_html = """
         <div class="detailed-results">
             <h2>Detailed Results</h2>
         """
-        
+
         # IoU Results
-        if 'iou' in standard_metrics:
-            iou_data = standard_metrics['iou']
+        if "iou" in standard_metrics:
+            iou_data = standard_metrics["iou"]
             results_html += f"""
             <h3>Spatial Overlap Analysis</h3>
             <div class="results-table">
@@ -480,10 +526,13 @@ class HTMLReportGenerator:
                 </table>
             </div>
             """
-        
+
         # Classification Results
-        if 'classification' in standard_metrics and 'error' not in standard_metrics['classification']:
-            class_data = standard_metrics['classification']
+        if (
+            "classification" in standard_metrics
+            and "error" not in standard_metrics["classification"]
+        ):
+            class_data = standard_metrics["classification"]
             results_html += f"""
             <h3>Classification Performance</h3>
             <div class="results-table">
@@ -497,10 +546,13 @@ class HTMLReportGenerator:
                 </table>
             </div>
             """
-        
+
         # Regression Results
-        if 'regression' in standard_metrics and 'error' not in standard_metrics['regression']:
-            reg_data = standard_metrics['regression']
+        if (
+            "regression" in standard_metrics
+            and "error" not in standard_metrics["regression"]
+        ):
+            reg_data = standard_metrics["regression"]
             results_html += f"""
             <h3>Depth Prediction Analysis</h3>
             <div class="results-table">
@@ -514,13 +566,13 @@ class HTMLReportGenerator:
                 </table>
             </div>
             """
-        
+
         results_html += "</div>"
         return results_html
-    
+
     def _generate_visualizations_section(self, report_data: Dict) -> str:
         """Generate visualizations section"""
-        
+
         return """
         <div class="visualizations">
             <h2>Visualizations</h2>
@@ -537,31 +589,33 @@ class HTMLReportGenerator:
             </div>
         </div>
         """
-    
+
     def _generate_recommendations_section(self, report_data: Dict) -> str:
         """Generate recommendations section"""
-        
-        recommendations = report_data.get('recommendations', [])
-        
+
+        recommendations = report_data.get("recommendations", [])
+
         rec_html = """
         <div class="recommendations">
             <h2>Recommendations</h2>
         """
-        
+
         if not recommendations:
             rec_html += "<p>No specific recommendations generated.</p>"
         else:
             # Group by priority
-            high_priority = [r for r in recommendations if r['priority'] == 'High']
-            medium_priority = [r for r in recommendations if r['priority'] == 'Medium']
-            low_priority = [r for r in recommendations if r['priority'] == 'Low']
-            
-            for priority_group, title in [(high_priority, 'High Priority'), 
-                                         (medium_priority, 'Medium Priority'),
-                                         (low_priority, 'Low Priority')]:
+            high_priority = [r for r in recommendations if r["priority"] == "High"]
+            medium_priority = [r for r in recommendations if r["priority"] == "Medium"]
+            low_priority = [r for r in recommendations if r["priority"] == "Low"]
+
+            for priority_group, title in [
+                (high_priority, "High Priority"),
+                (medium_priority, "Medium Priority"),
+                (low_priority, "Low Priority"),
+            ]:
                 if priority_group:
                     rec_html += f"<h3>{title}</h3><div class='recommendation-list'>"
-                    
+
                     for rec in priority_group:
                         rec_html += f"""
                         <div class="recommendation-item {rec['priority'].lower()}-priority">
@@ -571,18 +625,18 @@ class HTMLReportGenerator:
                             <div class="rec-metric"><strong>Supporting Metric:</strong> {rec['metric']}</div>
                         </div>
                         """
-                    
+
                     rec_html += "</div>"
-        
+
         rec_html += "</div>"
         return rec_html
-    
+
     def _create_html_content(self, sections: Dict) -> str:
         """
         Create complete HTML content with styling
         """
         css_styles = self._get_css_styles()
-        
+
         html_content = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -608,11 +662,11 @@ class HTMLReportGenerator:
                 
                 <main class="report-content">
         """
-        
+
         # Add sections
         for section_name, section_content in sections.items():
             html_content += f'<section class="report-section {section_name}">\n{section_content}\n</section>\n'
-        
+
         html_content += """
                 </main>
                 
@@ -623,9 +677,9 @@ class HTMLReportGenerator:
         </body>
         </html>
         """
-        
+
         return html_content
-    
+
     def _get_css_styles(self) -> str:
         """
         Get CSS styles for the report
@@ -836,183 +890,209 @@ class ValidationReportGenerator:
     """
     Main report generator class that coordinates different report types
     """
-    
+
     def __init__(self, config: Optional[ReportConfig] = None):
         """
         Initialize validation report generator
-        
+
         Args:
             config: Report configuration
         """
         self.config = config or ReportConfig()
         self.html_generator = HTMLReportGenerator(self.config)
         self.metrics_calc = MetricsCalculator()
-        
+
         logger.info("Validation Report Generator initialized")
-    
-    def generate_comprehensive_report(self, validation_results: Dict,
-                                    output_path: str,
-                                    additional_data: Optional[Dict] = None) -> Dict:
+
+    def generate_comprehensive_report(
+        self,
+        validation_results: Dict,
+        output_path: str,
+        additional_data: Optional[Dict] = None,
+    ) -> Dict:
         """
         Generate comprehensive validation report
-        
+
         Args:
             validation_results: Results from validation analysis
             output_path: Base path for output files (extension will be added)
             additional_data: Additional data to include
-            
+
         Returns:
             Dictionary with paths to generated reports
         """
         try:
             logger.info(f"Generating comprehensive validation report: {output_path}")
-            
+
             generated_files = {}
-            
+
             # Generate HTML report
-            if self.config.output_format in ['html', 'both']:
+            if self.config.output_format in ["html", "both"]:
                 html_path = f"{output_path}.html"
                 self.html_generator.generate_html_report(
                     validation_results, html_path, additional_data
                 )
-                generated_files['html'] = html_path
-            
+                generated_files["html"] = html_path
+
             # Generate PDF report (if requested and available)
-            if self.config.output_format in ['pdf', 'both'] and HAS_WEASYPRINT:
+            if self.config.output_format in ["pdf", "both"] and HAS_WEASYPRINT:
                 pdf_path = f"{output_path}.pdf"
                 self._generate_pdf_report(validation_results, pdf_path, additional_data)
-                generated_files['pdf'] = pdf_path
-            elif self.config.output_format in ['pdf', 'both']:
+                generated_files["pdf"] = pdf_path
+            elif self.config.output_format in ["pdf", "both"]:
                 logger.warning("PDF generation requested but weasyprint not available")
-            
+
             # Generate summary JSON
             summary_path = f"{output_path}_summary.json"
             self._generate_summary_json(validation_results, summary_path)
-            generated_files['summary'] = summary_path
-            
-            logger.info(f"Report generation completed. Files: {list(generated_files.keys())}")
+            generated_files["summary"] = summary_path
+
+            logger.info(
+                f"Report generation completed. Files: {list(generated_files.keys())}"
+            )
             return generated_files
-            
+
         except Exception as e:
             logger.error(f"Error generating comprehensive report: {e}")
             raise RuntimeError(f"Report generation failed: {e}")
-    
-    def _generate_pdf_report(self, validation_results: Dict, output_path: str,
-                           additional_data: Optional[Dict] = None) -> None:
+
+    def _generate_pdf_report(
+        self,
+        validation_results: Dict,
+        output_path: str,
+        additional_data: Optional[Dict] = None,
+    ) -> None:
         """
         Generate PDF report from HTML content
         """
         try:
             logger.info(f"Generating PDF report: {output_path}")
-            
+
             # Generate HTML content
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as temp_file:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".html", delete=False
+            ) as temp_file:
                 temp_html_path = temp_file.name
                 self.html_generator.generate_html_report(
                     validation_results, temp_html_path, additional_data
                 )
-            
+
             # Convert to PDF
             weasyprint.HTML(temp_html_path).write_pdf(output_path)
-            
+
             # Clean up
             Path(temp_html_path).unlink()
-            
+
             logger.info(f"PDF report generated: {output_path}")
-            
+
         except Exception as e:
             logger.error(f"Error generating PDF report: {e}")
             raise RuntimeError(f"PDF generation failed: {e}")
-    
-    def _generate_summary_json(self, validation_results: Dict, output_path: str) -> None:
+
+    def _generate_summary_json(
+        self, validation_results: Dict, output_path: str
+    ) -> None:
         """
         Generate JSON summary of validation results
         """
         try:
             logger.info(f"Generating summary JSON: {output_path}")
-            
+
             # Extract key information for JSON summary
-            standard_metrics = validation_results.get('standard_metrics', {})
-            
+            standard_metrics = validation_results.get("standard_metrics", {})
+
             summary = {
-                'report_metadata': {
-                    'title': self.config.title,
-                    'generated_at': datetime.now().isoformat(),
-                    'author': self.config.author,
-                    'organization': self.config.organization
+                "report_metadata": {
+                    "title": self.config.title,
+                    "generated_at": datetime.now().isoformat(),
+                    "author": self.config.author,
+                    "organization": self.config.organization,
                 },
-                'performance_summary': {},
-                'key_metrics': {},
-                'data_summary': validation_results.get('data_summary', {}),
-                'recommendations_count': 0
+                "performance_summary": {},
+                "key_metrics": {},
+                "data_summary": validation_results.get("data_summary", {}),
+                "recommendations_count": 0,
             }
-            
+
             # Extract key metrics
-            if 'iou' in standard_metrics:
-                summary['key_metrics']['iou_score'] = standard_metrics['iou'].get('iou', 0)
-            
-            if 'classification' in standard_metrics and 'error' not in standard_metrics['classification']:
-                cls_metrics = standard_metrics['classification']
-                summary['key_metrics'].update({
-                    'accuracy': cls_metrics.get('accuracy', 0),
-                    'f1_score': cls_metrics.get('f1_score', 0),
-                    'precision': cls_metrics.get('precision', 0),
-                    'recall': cls_metrics.get('recall', 0)
-                })
-            
-            if 'regression' in standard_metrics and 'error' not in standard_metrics['regression']:
-                reg_metrics = standard_metrics['regression']
-                summary['key_metrics'].update({
-                    'rmse': reg_metrics.get('rmse', 0),
-                    'mae': reg_metrics.get('mae', 0),
-                    'r_squared': reg_metrics.get('r_squared', 0),
-                    'nash_sutcliffe': reg_metrics.get('nse', 0)
-                })
-            
+            if "iou" in standard_metrics:
+                summary["key_metrics"]["iou_score"] = standard_metrics["iou"].get(
+                    "iou", 0
+                )
+
+            if (
+                "classification" in standard_metrics
+                and "error" not in standard_metrics["classification"]
+            ):
+                cls_metrics = standard_metrics["classification"]
+                summary["key_metrics"].update(
+                    {
+                        "accuracy": cls_metrics.get("accuracy", 0),
+                        "f1_score": cls_metrics.get("f1_score", 0),
+                        "precision": cls_metrics.get("precision", 0),
+                        "recall": cls_metrics.get("recall", 0),
+                    }
+                )
+
+            if (
+                "regression" in standard_metrics
+                and "error" not in standard_metrics["regression"]
+            ):
+                reg_metrics = standard_metrics["regression"]
+                summary["key_metrics"].update(
+                    {
+                        "rmse": reg_metrics.get("rmse", 0),
+                        "mae": reg_metrics.get("mae", 0),
+                        "r_squared": reg_metrics.get("r_squared", 0),
+                        "nash_sutcliffe": reg_metrics.get("nse", 0),
+                    }
+                )
+
             # Performance grades
             html_data = self.html_generator._prepare_report_data(validation_results)
-            summary['performance_grades'] = html_data.get('performance_grades', {})
-            summary['recommendations_count'] = len(html_data.get('recommendations', []))
-            
+            summary["performance_grades"] = html_data.get("performance_grades", {})
+            summary["recommendations_count"] = len(html_data.get("recommendations", []))
+
             # Save JSON
-            with open(output_path, 'w') as f:
+            with open(output_path, "w") as f:
                 json.dump(summary, f, indent=2, default=str)
-            
+
             logger.info(f"Summary JSON generated: {output_path}")
-            
+
         except Exception as e:
             logger.error(f"Error generating summary JSON: {e}")
             raise RuntimeError(f"JSON summary generation failed: {e}")
-    
-    def generate_comparison_report(self, model_results: Dict[str, Dict],
-                                 output_path: str) -> str:
+
+    def generate_comparison_report(
+        self, model_results: Dict[str, Dict], output_path: str
+    ) -> str:
         """
         Generate comparison report for multiple models
-        
+
         Args:
             model_results: Dictionary with model names as keys and validation results as values
             output_path: Path for output comparison report
-            
+
         Returns:
             Path to generated comparison report
         """
         try:
             logger.info(f"Generating model comparison report: {output_path}")
-            
+
             # Create comparison HTML
             html_content = self._create_comparison_html(model_results)
-            
+
             # Write to file
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
-            
+
             logger.info(f"Comparison report generated: {output_path}")
             return output_path
-            
+
         except Exception as e:
             logger.error(f"Error generating comparison report: {e}")
             raise RuntimeError(f"Comparison report generation failed: {e}")
-    
+
     def _create_comparison_html(self, model_results: Dict[str, Dict]) -> str:
         """
         Create HTML content for model comparison report
@@ -1020,96 +1100,108 @@ class ValidationReportGenerator:
         # Extract metrics for all models
         comparison_data = {}
         for model_name, results in model_results.items():
-            standard_metrics = results.get('standard_metrics', {})
-            
+            standard_metrics = results.get("standard_metrics", {})
+
             model_summary = {
-                'iou': standard_metrics.get('iou', {}).get('iou', 0),
-                'f1_score': 0,
-                'accuracy': 0,
-                'rmse': 0,
-                'mae': 0,
-                'r_squared': 0
+                "iou": standard_metrics.get("iou", {}).get("iou", 0),
+                "f1_score": 0,
+                "accuracy": 0,
+                "rmse": 0,
+                "mae": 0,
+                "r_squared": 0,
             }
-            
-            if 'classification' in standard_metrics and 'error' not in standard_metrics['classification']:
-                cls = standard_metrics['classification']
-                model_summary.update({
-                    'f1_score': cls.get('f1_score', 0),
-                    'accuracy': cls.get('accuracy', 0)
-                })
-            
-            if 'regression' in standard_metrics and 'error' not in standard_metrics['regression']:
-                reg = standard_metrics['regression']
-                model_summary.update({
-                    'rmse': reg.get('rmse', 0),
-                    'mae': reg.get('mae', 0),
-                    'r_squared': reg.get('r_squared', 0)
-                })
-            
+
+            if (
+                "classification" in standard_metrics
+                and "error" not in standard_metrics["classification"]
+            ):
+                cls = standard_metrics["classification"]
+                model_summary.update(
+                    {
+                        "f1_score": cls.get("f1_score", 0),
+                        "accuracy": cls.get("accuracy", 0),
+                    }
+                )
+
+            if (
+                "regression" in standard_metrics
+                and "error" not in standard_metrics["regression"]
+            ):
+                reg = standard_metrics["regression"]
+                model_summary.update(
+                    {
+                        "rmse": reg.get("rmse", 0),
+                        "mae": reg.get("mae", 0),
+                        "r_squared": reg.get("r_squared", 0),
+                    }
+                )
+
             comparison_data[model_name] = model_summary
-        
+
         # Create comparison table
-        metrics_to_compare = ['iou', 'f1_score', 'accuracy', 'rmse', 'mae', 'r_squared']
+        metrics_to_compare = ["iou", "f1_score", "accuracy", "rmse", "mae", "r_squared"]
         metric_labels = {
-            'iou': 'IoU Score',
-            'f1_score': 'F1 Score',
-            'accuracy': 'Accuracy',
-            'rmse': 'RMSE (m)',
-            'mae': 'MAE (m)',
-            'r_squared': 'R²'
+            "iou": "IoU Score",
+            "f1_score": "F1 Score",
+            "accuracy": "Accuracy",
+            "rmse": "RMSE (m)",
+            "mae": "MAE (m)",
+            "r_squared": "R²",
         }
-        
+
         table_html = """
         <table class="comparison-table">
             <thead>
                 <tr>
                     <th>Metric</th>
         """
-        
+
         for model_name in comparison_data.keys():
             table_html += f"<th>{model_name}</th>"
-        
+
         table_html += """
                     <th>Best Model</th>
                 </tr>
             </thead>
             <tbody>
         """
-        
+
         for metric in metrics_to_compare:
             table_html += f"""
                 <tr>
                     <td><strong>{metric_labels[metric]}</strong></td>
             """
-            
+
             # Find best model for this metric
-            metric_values = {name: data[metric] for name, data in comparison_data.items()}
-            
+            metric_values = {
+                name: data[metric] for name, data in comparison_data.items()
+            }
+
             # For RMSE and MAE, lower is better
-            if metric in ['rmse', 'mae']:
+            if metric in ["rmse", "mae"]:
                 best_model = min(metric_values.keys(), key=lambda x: metric_values[x])
             else:
                 best_model = max(metric_values.keys(), key=lambda x: metric_values[x])
-            
+
             for model_name, model_data in comparison_data.items():
                 value = model_data[metric]
-                css_class = 'best-value' if model_name == best_model else ''
-                
+                css_class = "best-value" if model_name == best_model else ""
+
                 if isinstance(value, float):
                     value_str = f"{value:.4f}"
                 else:
                     value_str = str(value)
-                
+
                 table_html += f'<td class="{css_class}">{value_str}</td>'
-            
+
             table_html += f"<td><strong>{best_model}</strong></td>"
             table_html += "</tr>"
-        
+
         table_html += """
             </tbody>
         </table>
         """
-        
+
         # Complete HTML
         html_content = f"""
         <!DOCTYPE html>
@@ -1184,7 +1276,7 @@ class ValidationReportGenerator:
         </body>
         </html>
         """
-        
+
         return html_content
 
 
@@ -1192,45 +1284,47 @@ class ValidationReportGenerator:
 def create_report_config(title: str, **kwargs) -> ReportConfig:
     """
     Create report configuration with specified parameters
-    
+
     Args:
         title: Report title
         **kwargs: Additional configuration parameters
-        
+
     Returns:
         ReportConfig object
     """
     return ReportConfig(title=title, **kwargs)
 
 
-def batch_generate_reports(validation_results_list: List[Dict],
-                          output_dir: str,
-                          config: Optional[ReportConfig] = None) -> List[str]:
+def batch_generate_reports(
+    validation_results_list: List[Dict],
+    output_dir: str,
+    config: Optional[ReportConfig] = None,
+) -> List[str]:
     """
     Generate reports for multiple validation runs
-    
+
     Args:
         validation_results_list: List of validation result dictionaries
         output_dir: Output directory for reports
         config: Report configuration
-        
+
     Returns:
         List of generated report file paths
     """
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-    
+
     generator = ValidationReportGenerator(config)
     generated_files = []
-    
+
     for i, results in enumerate(validation_results_list):
         try:
             report_path = output_path / f"validation_report_{i+1:03d}"
             files = generator.generate_comprehensive_report(results, str(report_path))
             generated_files.extend(files.values())
-            
+
         except Exception as e:
             logger.error(f"Failed to generate report {i+1}: {e}")
-    
+
     logger.info(f"Generated {len(generated_files)} report files in {output_dir}")
     return generated_files
