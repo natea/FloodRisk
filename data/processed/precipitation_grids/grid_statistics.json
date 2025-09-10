@@ -1,0 +1,12 @@
+{
+  "min_precipitation_mm": 126.99999999999999,
+  "max_precipitation_mm": 179.1461999996583,
+  "mean_precipitation_mm": 127.75217278703667,
+  "std_precipitation_mm": 4.1962884659014525,
+  "grid_shape": [
+    41,
+    60
+  ],
+  "resolution_degrees": 0.01,
+  "ensemble_members": 10
+}

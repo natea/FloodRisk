@@ -1,0 +1,18 @@
+# Ignore files for Vercel deployment
+__pycache__
+*.pyc
+.env
+venv/
+env/
+.venv/
+*.log
+.git/
+.gitignore
+README.md
+Dockerfile
+docker-compose.yml
+*.md
+tests/
+.pytest_cache/
+app.py
+templates/

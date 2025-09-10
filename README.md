@@ -11,6 +11,8 @@ A comprehensive flood risk prediction system using machine learning and hydrolog
 - **Scalable Architecture**: Docker containerization with Redis caching and PostgreSQL storage
 - **Monitoring & Observability**: Integrated Prometheus metrics and Grafana dashboards
 
+<img width="3376" height="1906" alt="CleanShot 2025-09-07 at 17 27 57@2x" src="https://github.com/user-attachments/assets/90cf3560-b428-49b7-9114-038866c5079c" />
+
 ## Quick Start
 
 ### Prerequisites
@@ -269,4 +271,5 @@ Structured logging with configurable levels:
 
 - LISFLOOD-FP modeling framework
 - PyTorch community
+
 - Geospatial Python ecosystem

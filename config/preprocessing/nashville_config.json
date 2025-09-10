@@ -1,0 +1,93 @@
+{
+  "region_name": "Nashville, TN",
+  "description": "Configuration for Nashville metropolitan area flood risk modeling",
+  "bounds": {
+    "minx": -87.0,
+    "miny": 35.8, 
+    "maxx": -86.4,
+    "maxy": 36.4,
+    "crs": "EPSG:4326"
+  },
+  "target_crs": "EPSG:3857",
+  "target_resolution": 10.0,
+  "dem_processing": {
+    "fill_sinks": true,
+    "sink_fill_method": "planchon_darboux",
+    "flow_method": "d8",
+    "min_drainage_area": 500.0,
+    "stream_threshold": 500.0,
+    "smoothing_sigma": 0.5,
+    "condition_streams": true,
+    "stream_buffer_distance": 50.0
+  },
+  "spatial_processing": {
+    "resampling_method": "bilinear",
+    "max_memory_gb": 8.0,
+    "chunk_size": 1024,
+    "overlap_pixels": 64,
+    "enable_parallel": true,
+    "max_workers": 4
+  },
+  "rainfall_processing": {
+    "time_step_minutes": 15,
+    "distribution_types": ["scs_type_ii", "uniform", "chicago"],
+    "return_periods": [10, 25, 50, 100, 500],
+    "durations": [6, 12, 24],
+    "spatial_variability": 0.1,
+    "temporal_patterns": {
+      "front_loaded": 0.3,
+      "back_loaded": 0.7,
+      "uniform": 1.0
+    }
+  },
+  "feature_extraction": {
+    "compute_curvature": true,
+    "compute_hand": true,
+    "compute_twi": true,
+    "compute_spi": true,
+    "compute_tri": true,
+    "hand_max_distance": 2000.0,
+    "roughness_window": 5,
+    "curvature_smoothing": 0.5
+  },
+  "validation": {
+    "check_crs_alignment": true,
+    "check_extent_overlap": true,
+    "check_resolution_match": true,
+    "tolerance_meters": 0.5,
+    "min_overlap_percent": 95.0,
+    "check_data_quality": true,
+    "check_nodata_percent": true,
+    "max_nodata_percent": 10.0
+  },
+  "output": {
+    "save_intermediate": true,
+    "compress": true,
+    "compression_method": "lzw",
+    "dtype": "float32",
+    "nodata_value": -9999
+  },
+  "quality_control": {
+    "elevation_range": {
+      "min": 100.0,
+      "max": 400.0
+    },
+    "slope_range": {
+      "min": 0.0,
+      "max": 45.0
+    },
+    "flow_accumulation_range": {
+      "min": 1.0,
+      "max": 1000000.0
+    },
+    "hand_range": {
+      "min": 0.0,
+      "max": 100.0
+    }
+  },
+  "known_issues": {
+    "urban_noise": "Urban areas may have artifacts from buildings/structures",
+    "water_bodies": "Large water bodies should be masked appropriately",
+    "bridges": "Bridge crossings may create flow discontinuities"
+  }
+}

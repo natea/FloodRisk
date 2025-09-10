@@ -1,0 +1,38 @@
+[
+  {
+    "tile_id": 3,
+    "tile_name": "tile_00003.tif",
+    "source_file": "test_dem.tiff",
+    "row": 1,
+    "col": 0,
+    "x_start": 0,
+    "y_start": 448,
+    "width": 512,
+    "height": 512,
+    "valid_pixel_ratio": 1.0,
+    "bounds": [
+      -87.1284,
+      35.257799999999996,
+      -86.6164,
+      35.7698
+    ]
+  },
+  {
+    "tile_id": 6,
+    "tile_name": "tile_00006.tif",
+    "source_file": "test_dem.tiff",
+    "row": 2,
+    "col": 0,
+    "x_start": 0,
+    "y_start": 512,
+    "width": 512,
+    "height": 512,
+    "valid_pixel_ratio": 1.0,
+    "bounds": [
+      -87.1284,
+      35.193799999999996,
+      -86.6164,
+      35.705799999999996
+    ]
+  }
+]

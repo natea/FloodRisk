@@ -1,0 +1,30 @@
+{
+  "event_name": "May 2010 Tennessee Floods",
+  "dates": [
+    "2010-04-30",
+    "2010-05-03"
+  ],
+  "peak_date": "2010-05-02",
+  "nashville_airport_total": 343.9,
+  "48hr_total": 343.9,
+  "estimated_return_period": ">1000 years",
+  "fatalities": 31,
+  "damage_usd": 2000000000,
+  "key_locations": {
+    "Nashville Airport": {
+      "lat": 36.1253,
+      "lon": -86.6764,
+      "rainfall_mm": 343.9
+    },
+    "Downtown Nashville": {
+      "lat": 36.1627,
+      "lon": -86.7816,
+      "flood_depth_m": 3.0
+    },
+    "Opryland": {
+      "lat": 36.2051,
+      "lon": -86.6889,
+      "flood_depth_m": 2.5
+    }
+  }
+}

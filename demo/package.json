@@ -1,0 +1,12 @@
+{
+  "name": "nashville-flood-risk-demo",
+  "version": "1.0.0",
+  "description": "AI-powered flood risk assessment for Nashville",
+  "scripts": {
+    "build": "echo 'No build required for Python'",
+    "vercel-build": "echo 'No build required for Python'"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

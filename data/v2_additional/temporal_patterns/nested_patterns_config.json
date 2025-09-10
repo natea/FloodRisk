@@ -1,0 +1,32 @@
+{
+  "1hr": {
+    "duration_hours": 1,
+    "time_steps": 4,
+    "peak_time": 0.5
+  },
+  "2hr": {
+    "duration_hours": 2,
+    "time_steps": 8,
+    "peak_time": 1.0
+  },
+  "3hr": {
+    "duration_hours": 3,
+    "time_steps": 12,
+    "peak_time": 1.5
+  },
+  "6hr": {
+    "duration_hours": 6,
+    "time_steps": 24,
+    "peak_time": 3.0
+  },
+  "12hr": {
+    "duration_hours": 12,
+    "time_steps": 48,
+    "peak_time": 6.0
+  },
+  "24hr": {
+    "duration_hours": 24,
+    "time_steps": 24,
+    "peak_time": 11.5
+  }
+}

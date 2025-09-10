@@ -1,0 +1,135 @@
+{
+  "batch_id": "batch_1757304568",
+  "start_time": "2025-09-08T00:09:28.133418",
+  "end_time": "2025-09-08T00:09:30.497257",
+  "runtime_seconds": 2.363839,
+  "total_scenarios": 1,
+  "success_count": 1,
+  "failure_count": 0,
+  "success_rate": 1.0,
+  "failed_scenarios": [],
+  "statistics_summary": {
+    "total_simulations": 1,
+    "flooded_fraction": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "max_depth_m": {
+      "mean": 4.484464531816139e+34,
+      "std": 0.0,
+      "min": 4.484464531816139e+34,
+      "max": 4.484464531816139e+34
+    },
+    "mean_depth_flooded_m": {
+      "mean": NaN,
+      "std": NaN,
+      "min": NaN,
+      "max": NaN
+    }
+  },
+  "config": {
+    "max_parallel_jobs": 1,
+    "max_retries": 2,
+    "retry_delay_seconds": 60.0,
+    "max_memory_gb": null,
+    "max_disk_space_gb": null,
+    "validate_results": true,
+    "cleanup_failed_runs": false,
+    "keep_intermediate_files": false,
+    "result_callback": null
+  },
+  "successful_results": [
+    {
+      "simulation_id": "100yr_uniform_0mm",
+      "status": "success",
+      "start_time": "2025-09-08T00:09:28.133503",
+      "end_time": "2025-09-08T00:09:30.495874",
+      "runtime_seconds": 2.362371,
+      "config": {
+        "dem_file": "data/nashville/dem/nashville_dem_10m_1.tif",
+        "rainfall_file": "data/nashville/simulations/batch_1757304568/rainfall_100yr_uniform_0mm.rain",
+        "manning_file": "manning.asc",
+        "infiltration_file": "infiltration.asc",
+        "sim_time": 5.0,
+        "initial_timestep": 10.0,
+        "output_prefix": "res_100yr_uniform_0mm",
+        "output_directory": "results_100yr_uniform_0mm",
+        "acceleration": true,
+        "depth_threshold": 0.05,
+        "boundary_file": null,
+        "floodplain_friction": null,
+        "max_runtime_hours": 24.0,
+        "expected_flooded_fraction": [
+          0.001,
+          0.3
+        ]
+      },
+      "outputs": {
+        "depth_file": "data/nashville/simulations/simulations/100yr_uniform_0mm/results_100yr_uniform_0mm/res_100yr_uniform_0mm.max",
+        "extent_file": "data/nashville/simulations/simulations/100yr_uniform_0mm/results_100yr_uniform_0mm/flood_extent_100yr_uniform_0mm.npy",
+        "statistics": {
+          "total_cells": 32,
+          "flooded_cells": 0,
+          "flooded_fraction": 0.0,
+          "max_depth_m": 4.484464531816139e+34,
+          "mean_depth_flooded_m": NaN,
+          "depth_threshold_m": 0.05
+        }
+      },
+      "validation": {
+        "status": "failed",
+        "warnings": [
+          "Low flooded fraction: 0.000% < 0.100%"
+        ],
+        "errors": [
+          "Unrealistic maximum depth: 44844645318161386100360153225232384.0m"
+        ]
+      },
+      "working_directory": "data/nashville/simulations/simulations/100yr_uniform_0mm",
+      "scenario": {
+        "scenario_id": "100yr_uniform_0mm",
+        "return_period": {
+          "return_period_years": 100,
+          "rainfall_depth_24h_mm": 177.8,
+          "description": "100-year design storm",
+          "is_sub_design": false
+        },
+        "hyetograph": {
+          "pattern_type": "uniform",
+          "total_depth_mm": 0,
+          "duration_hours": 24.0,
+          "timestep_hours": 1.0,
+          "peak_hour": null,
+          "front_factor": 2.0,
+          "center_factor": 3.0
+        },
+        "parameter_file": "data/nashville/simulations/batch_1757304568/simulation_100yr_uniform_0mm.par",
+        "rainfall_file": "data/nashville/simulations/batch_1757304568/rainfall_100yr_uniform_0mm.rain",
+        "config": {
+          "dem_file": "nashville_dem_10m_1.tif",
+          "rainfall_file": "rainfall_100yr_uniform_0mm.rain",
+          "manning_file": "manning.asc",
+          "infiltration_file": "infiltration.asc",
+          "output_prefix": "res_100yr_uniform_0mm",
+          "output_directory": "results_100yr_uniform_0mm",
+          "sim_time": 5.0,
+          "initial_timestep": 10.0,
+          "acceleration": true,
+          "depthoff": true,
+          "elevoff": true
+        },
+        "original_dem_file": "data/nashville/dem/nashville_dem_10m_1.tif",
+        "created_at": "2025-09-08T00:09:28.133019"
+      },
+      "batch_validation": {
+        "passed": false,
+        "issues": [
+          "Unrealistic maximum depth: 44844645318161386100360153225232384.0m"
+        ]
+      }
+    }
+  ],
+  "failed_results": []
+}

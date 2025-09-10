@@ -1,0 +1,46 @@
+[
+  {
+    "simulation_id": "100yr_uniform_0mm",
+    "status": "failed",
+    "start_time": "2025-09-08T00:07:47.567125",
+    "end_time": "2025-09-08T00:08:05.198177",
+    "runtime_seconds": 17.631052,
+    "error": "LISFLOOD-FP execution failed: ERROR: Loading DEM. Aborting.\tdata/nashville/dem/nashville_dem_10m_1.tif\n",
+    "working_directory": "data/nashville/simulations/simulations/100yr_uniform_0mm",
+    "scenario": {
+      "scenario_id": "100yr_uniform_0mm",
+      "return_period": {
+        "return_period_years": 100,
+        "rainfall_depth_24h_mm": 177.8,
+        "description": "100-year design storm",
+        "is_sub_design": false
+      },
+      "hyetograph": {
+        "pattern_type": "uniform",
+        "total_depth_mm": 0,
+        "duration_hours": 24.0,
+        "timestep_hours": 1.0,
+        "peak_hour": null,
+        "front_factor": 2.0,
+        "center_factor": 3.0
+      },
+      "parameter_file": "data/nashville/simulations/batch_1757304467/simulation_100yr_uniform_0mm.par",
+      "rainfall_file": "data/nashville/simulations/batch_1757304467/rainfall_100yr_uniform_0mm.rain",
+      "config": {
+        "dem_file": "nashville_dem_10m_1.tif",
+        "rainfall_file": "rainfall_100yr_uniform_0mm.rain",
+        "manning_file": "manning.asc",
+        "infiltration_file": "infiltration.asc",
+        "output_prefix": "res_100yr_uniform_0mm",
+        "output_directory": "results_100yr_uniform_0mm",
+        "sim_time": 10.0,
+        "initial_timestep": 10.0,
+        "acceleration": true,
+        "depthoff": true,
+        "elevoff": true
+      },
+      "original_dem_file": "data/nashville/dem/nashville_dem_10m_1.tif",
+      "created_at": "2025-09-08T00:07:47.566637"
+    }
+  }
+]

@@ -1,0 +1,43 @@
+{
+  "batch_id": "batch_1757304087",
+  "created_at": "2025-09-08T00:01:27.949301",
+  "dem_file": "data/nashville/dem/nashville_dem_10m_1.tif",
+  "output_dir": "data/nashville/simulations/batch_1757304087",
+  "total_scenarios": 2,
+  "return_periods": [
+    {
+      "return_period_years": 100,
+      "rainfall_depth_24h_mm": 177.8,
+      "description": "100-year design storm",
+      "is_sub_design": false
+    },
+    {
+      "return_period_years": 500,
+      "rainfall_depth_24h_mm": 222.25,
+      "description": "500-year extreme event",
+      "is_sub_design": false
+    }
+  ],
+  "hyetograph_patterns": [
+    {
+      "pattern_type": "uniform",
+      "total_depth_mm": 0,
+      "duration_hours": 24.0,
+      "timestep_hours": 1.0,
+      "peak_hour": null,
+      "front_factor": 2.0,
+      "center_factor": 3.0
+    }
+  ],
+  "config": {
+    "max_parallel_jobs": 4,
+    "max_retries": 2,
+    "retry_delay_seconds": 60.0,
+    "max_memory_gb": null,
+    "max_disk_space_gb": null,
+    "validate_results": true,
+    "cleanup_failed_runs": false,
+    "keep_intermediate_files": false,
+    "result_callback": null
+  }
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "file": "noaa_25yr_24hr.npz",
+    "return_period_years": 25,
+    "duration_hours": 24,
+    "min_precipitation_mm": NaN,
+    "max_precipitation_mm": NaN,
+    "mean_precipitation_mm": NaN,
+    "std_precipitation_mm": NaN,
+    "p10_mm": NaN,
+    "p50_mm": NaN,
+    "p90_mm": NaN,
+    "grid_shape": [
+      41,
+      61
+    ],
+    "resolution_degrees": 0.01,
+    "ensemble_members": 20
+  },
+  {
+    "file": "noaa_100yr_12hr.npz",
+    "return_period_years": 100,
+    "duration_hours": 12,
+    "min_precipitation_mm": NaN,
+    "max_precipitation_mm": NaN,
+    "mean_precipitation_mm": NaN,
+    "std_precipitation_mm": NaN,
+    "p10_mm": NaN,
+    "p50_mm": NaN,
+    "p90_mm": NaN,
+    "grid_shape": [
+      41,
+      61
+    ],
+    "resolution_degrees": 0.01,
+    "ensemble_members": 20
+  },
+  {
+    "file": "noaa_100yr_24hr.npz",
+    "return_period_years": 100,
+    "duration_hours": 24,
+    "min_precipitation_mm": NaN,
+    "max_precipitation_mm": NaN,
+    "mean_precipitation_mm": NaN,
+    "std_precipitation_mm": NaN,
+    "p10_mm": NaN,
+    "p50_mm": NaN,
+    "p90_mm": NaN,
+    "grid_shape": [
+      41,
+      61
+    ],
+    "resolution_degrees": 0.01,
+    "ensemble_members": 20
+  },
+  {
+    "file": "noaa_100yr_6hr.npz",
+    "return_period_years": 100,
+    "duration_hours": 6,
+    "min_precipitation_mm": NaN,
+    "max_precipitation_mm": NaN,
+    "mean_precipitation_mm": NaN,
+    "std_precipitation_mm": NaN,
+    "p10_mm": NaN,
+    "p50_mm": NaN,
+    "p90_mm": NaN,
+    "grid_shape": [
+      41,
+      61
+    ],
+    "resolution_degrees": 0.01,
+    "ensemble_members": 20
+  }
+]
