@@ -1,0 +1,78 @@
+name: 'Setup GDAL'
+description: 'Install GDAL and related geospatial dependencies'
+inputs:
+  gdal-version:
+    description: 'GDAL version to install'
+    required: false
+    default: '3.6.0'
+  method:
+    description: 'Installation method: apt, conda, or mamba'
+    required: false
+    default: 'apt'
+outputs:
+  gdal-version:
+    description: 'Installed GDAL version'
+    value: ${{ steps.gdal-install.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache GDAL installation
+      if: inputs.method == 'apt'
+      uses: actions/cache@v3
+      with:
+        path: |
+          /usr/lib/libgdal*
+          /usr/include/gdal*
+          /usr/bin/gdal*
+        key: gdal-${{ runner.os }}-${{ inputs.gdal-version }}-apt
+    
+    - name: Install GDAL via APT
+      if: inputs.method == 'apt'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository ppa:ubuntugis/ppa
+        sudo apt-get update
+        sudo apt-get install -y \
+          gdal-bin \
+          libgdal-dev \
+          libspatialindex-dev \
+          libproj-dev \
+          proj-data \
+          proj-bin \
+          libgeos-dev
+        gdal-config --version
+        
+    - name: Setup conda
+      if: inputs.method == 'conda' || inputs.method == 'mamba'
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        channels: conda-forge,defaults
+        channel-priority: strict
+        
+    - name: Install GDAL via conda/mamba
+      if: inputs.method == 'conda' || inputs.method == 'mamba'
+      shell: bash -el {0}
+      run: |
+        if [ "${{ inputs.method }}" == "mamba" ]; then
+          conda install -c conda-forge mamba
+          mamba install -c conda-forge gdal>=${{ inputs.gdal-version }}
+        else
+          conda install -c conda-forge gdal>=${{ inputs.gdal-version }}
+        fi
+        
+    - name: Verify installation
+      id: gdal-install
+      shell: bash
+      run: |
+        if command -v gdal-config &> /dev/null; then
+          version=$(gdal-config --version)
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "✅ GDAL $version installed successfully"
+        else
+          echo "❌ GDAL installation failed"
+          exit 1
+        fi
